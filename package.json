@@ -1,0 +1,20 @@
+{
+  "name": "sevacare-elder-care-system",
+  "version": "1.0.0",
+  "description": "Elder Care Management System - Full Stack Application",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd oldagehome-backend && npm install && cd ../oldagehome-frontend && npm install",
+    "dev": "concurrently \"npm run dev -w oldagehome-backend\" \"npm run dev -w oldagehome-frontend\"",
+    "build": "npm run build -w oldagehome-backend && npm run build -w oldagehome-frontend",
+    "test": "npm test -w oldagehome-backend",
+    "lint": "npm run lint -w oldagehome-backend && npm run lint -w oldagehome-frontend"
+  },
+  "workspaces": [
+    "oldagehome-backend",
+    "oldagehome-frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
