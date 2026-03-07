@@ -1,18 +1,27 @@
 {
-  "name": "sevacare-elder-care-system",
+  "name": "sevacare-unified",
   "version": "1.0.0",
-  "description": "Elder Care Management System - Full Stack Application",
+  "description": "SevaCare Elder Care Management System - Unified Repository",
   "private": true,
   "scripts": {
-    "install:all": "npm install && cd oldagehome-backend && npm install && cd ../oldagehome-frontend && npm install",
-    "dev": "concurrently \"npm run dev -w oldagehome-backend\" \"npm run dev -w oldagehome-frontend\"",
-    "build": "npm run build -w oldagehome-backend && npm run build -w oldagehome-frontend",
-    "test": "npm test -w oldagehome-backend",
-    "lint": "npm run lint -w oldagehome-backend && npm run lint -w oldagehome-frontend"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../shared && npm install",
+    "dev": "concurrently \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
+    "dev:backend": "npm run start:dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
+    "start": "npm run start:prod -w backend & npm run start -w frontend",
+    "start:backend": "npm run start:prod -w backend",
+    "start:frontend": "npm run start -w frontend",
+    "test": "npm test -w backend",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "type-check": "tsc --noEmit -p ./backend && tsc --noEmit -p ./frontend"
   },
   "workspaces": [
-    "oldagehome-backend",
-    "oldagehome-frontend"
+    "backend",
+    "frontend",
+    "shared"
   ],
   "devDependencies": {
     "concurrently": "^8.2.2"
