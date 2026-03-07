@@ -1,2 +1,61 @@
 # Ignore reserved file names on Windows
 nul
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-lock.yaml
+package-lock.json
+
+# Build outputs
+backend/dist/
+frontend/.next/
+frontend/.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.prod.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
+.claude/
+.dist/
+
+# Development
+dist/
+build/
+out/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Backend specific
+backend/prisma/.env
+backend/firebase-credentials.json
+
+# Frontend specific
+frontend/.env.local
+frontend/firebase-credentials.json
+
+# Temporary project files
+tmpclaude-*

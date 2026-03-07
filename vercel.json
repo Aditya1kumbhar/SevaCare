@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "installCommand": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../shared && npm install",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "http://localhost:3001/api/v1/:path*"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@next_public_api_url"
+  }
+}

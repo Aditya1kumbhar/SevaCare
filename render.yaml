@@ -2,7 +2,7 @@ services:
   - type: web
     name: sevacare-backend
     env: node
-    rootDir: oldagehome-backend
+    rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
     envVars:
@@ -19,7 +19,7 @@ services:
       - key: JWT_EXPIRATION
         value: 24h
       - key: FRONTEND_URL
-        value: https://your-frontend-url.onrender.com
+        value: https://sevacare-frontend.onrender.com
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: FIREBASE_PRIVATE_KEY
@@ -30,9 +30,9 @@ services:
   - type: web
     name: sevacare-frontend
     env: node
-    rootDir: oldagehome-frontend
+    rootDir: frontend
     buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://your-backend-url.onrender.com/api/v1
+        value: https://sevacare-backend.onrender.com/api/v1
