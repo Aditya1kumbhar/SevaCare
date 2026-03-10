@@ -1,30 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth-middleware'
+import * as firebaseAdmin from 'firebase-admin'
 
 // Notifications routes — Firebase Admin SDK
 // These endpoints handle push notification sending
 
-let admin: any = null
+let initialized = false
 
-async function getFirebaseAdmin() {
-  if (admin) return admin
-  
-  const firebaseAdmin = await import('firebase-admin')
-  
-  const credentials = {
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  }
+function getFirebaseAdmin() {
+  if (!initialized && !firebaseAdmin.apps.length) {
+    const credentials = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    }
 
-  if (!firebaseAdmin.apps.length) {
     firebaseAdmin.initializeApp({
       credential: firebaseAdmin.credential.cert(credentials as any),
     })
+    initialized = true
   }
 
-  admin = firebaseAdmin
-  return admin
+  return firebaseAdmin
 }
 
 // POST /api/v1/notifications
@@ -34,7 +31,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, ...data } = body
 
-    const firebaseAdmin = await getFirebaseAdmin()
+    const firebaseAdmin = getFirebaseAdmin()
 
     switch (type) {
       case 'send-to-device': {
