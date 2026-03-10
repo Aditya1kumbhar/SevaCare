@@ -1,5 +1,4 @@
 import apiClient from './api'
-import { CreateMedicationDto, UpdateMedicationDto, MedicationResponseDto } from 'sevacare-shared'
 import { Medication } from '@/lib/residents-context'
 
 export interface CreateMedicationData {

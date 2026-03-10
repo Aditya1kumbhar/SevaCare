@@ -9,15 +9,16 @@ yarn-error.log
 package-lock.json
 
 # Build outputs
-backend/dist/
 frontend/.next/
 frontend/.turbo/
 
-# Environment
+# Environment (NEVER commit these)
 .env
 .env.local
 .env.*.local
-.env.prod.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
 
 # IDE
 .vscode/
@@ -49,13 +50,8 @@ coverage/
 logs/
 *.log
 
-# Backend specific
-backend/prisma/.env
-backend/firebase-credentials.json
-
-# Frontend specific
-frontend/.env.local
-frontend/firebase-credentials.json
+# Firebase credentials
+firebase-credentials.json
 
 # Temporary project files
 tmpclaude-*

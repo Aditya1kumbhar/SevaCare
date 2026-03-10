@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+// Now using same-origin API routes (Next.js API Routes)
+// No need for external API URL
+const API_BASE_URL = '/api/v1'
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

@@ -1,15 +1,9 @@
 import apiClient from './api'
-import { SignUpDto, SignInDto, AuthResponseDto } from 'sevacare-shared'
 
 export interface SignUpData {
   name: string
   email: string
   phone: string
-  password: string
-}
-
-export interface SignInData {
-  email: string
   password: string
 }
 

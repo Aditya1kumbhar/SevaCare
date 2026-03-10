@@ -1,5 +1,4 @@
 import apiClient from './api'
-import { CreateResidentDto, UpdateResidentDto, ResidentResponseDto } from 'sevacare-shared'
 import { Resident } from '@/lib/residents-context'
 
 export interface CreateResidentData {
@@ -26,8 +25,6 @@ export const residentsService = {
       const response = await apiClient.get(`/residents/${id}`)
       return response.data
     } catch (error: any) {
-      // Re-throw the error so the component can handle it
-      // but log it more gracefully
       if (error.response?.status === 404) {
         console.warn(`⚠️ Resident ${id} not found (404)`)
       } else {
