@@ -1,132 +1,65 @@
 -- ============================================
--- SevaCare Database Schema for Supabase
--- Copy and paste this in Supabase SQL Editor
+-- SevaCare MVP — Supabase Schema
+-- ZERO-COST stack: Supabase Auth + wa.me links
+-- Copy & paste this into Supabase SQL Editor
 -- ============================================
 
--- 1. Create UserRole enum
-CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'CARETAKER', 'SUPERVISOR');
-
--- 2. Users table
-CREATE TABLE "users" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "email" TEXT NOT NULL,
-  "name" TEXT NOT NULL,
-  "phone" TEXT NOT NULL,
-  "password" TEXT NOT NULL,
-  "role" "UserRole" NOT NULL DEFAULT 'CARETAKER',
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
-  CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+-- 1. Residents table
+CREATE TABLE residents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  age INTEGER NOT NULL,
+  room_number TEXT,
+  family_contact_name TEXT NOT NULL,
+  family_phone_number TEXT NOT NULL,  -- WhatsApp number with country code (e.g., +919876543210)
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-CREATE UNIQUE INDEX "users_phone_key" ON "users"("phone");
 
--- 3. Residents table
-CREATE TABLE "residents" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "name" TEXT NOT NULL,
-  "age" INTEGER NOT NULL,
-  "gender" TEXT NOT NULL,
-  "chronicIllnesses" TEXT[] NOT NULL DEFAULT '{}',
-  "mobilityStatus" TEXT NOT NULL,
-  "memoryLoss" BOOLEAN NOT NULL DEFAULT false,
-  "anxietyDepression" BOOLEAN NOT NULL DEFAULT false,
-  "allergies" TEXT,
-  "emergencyContactName" TEXT,
-  "emergencyContactPhone" TEXT,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "userId" TEXT NOT NULL,
-  
-  CONSTRAINT "residents_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "residents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX "residents_userId_idx" ON "residents"("userId");
+ALTER TABLE residents ENABLE ROW LEVEL SECURITY;
 
--- 4. Medications table
-CREATE TABLE "medications" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "name" TEXT NOT NULL,
-  "dose" TEXT NOT NULL,
-  "frequency" TEXT NOT NULL,
-  "time" TEXT NOT NULL,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "residentId" TEXT NOT NULL,
-  
-  CONSTRAINT "medications_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "medications_residentId_fkey" FOREIGN KEY ("residentId") REFERENCES "residents"("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX "medications_residentId_idx" ON "medications"("residentId");
+CREATE POLICY "Authenticated users can read residents"
+  ON residents FOR SELECT USING (auth.role() = 'authenticated');
 
--- 5. Health Records table
-CREATE TABLE "health_records" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "dateRecorded" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "bloodPressure" TEXT,
-  "heartRate" INTEGER,
-  "temperature" DOUBLE PRECISION,
-  "weight" DOUBLE PRECISION,
-  "notes" TEXT,
-  "recordedBy" TEXT NOT NULL,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "residentId" TEXT NOT NULL,
-  
-  CONSTRAINT "health_records_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "health_records_residentId_fkey" FOREIGN KEY ("residentId") REFERENCES "residents"("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX "health_records_residentId_idx" ON "health_records"("residentId");
+CREATE POLICY "Authenticated users can insert residents"
+  ON residents FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
--- 6. Medicine Scans table
-CREATE TABLE "medicine_scans" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "medicineNameEn" TEXT NOT NULL,
-  "medicineNameMr" TEXT NOT NULL,
-  "usageEn" TEXT NOT NULL,
-  "usageMr" TEXT NOT NULL,
-  "scannedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "isAdded" BOOLEAN NOT NULL DEFAULT false,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "residentId" TEXT NOT NULL,
-  
-  CONSTRAINT "medicine_scans_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "medicine_scans_residentId_fkey" FOREIGN KEY ("residentId") REFERENCES "residents"("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX "medicine_scans_residentId_idx" ON "medicine_scans"("residentId");
+CREATE POLICY "Authenticated users can update residents"
+  ON residents FOR UPDATE USING (auth.role() = 'authenticated');
 
--- 7. Activity Logs table
-CREATE TABLE "activity_logs" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "action" TEXT NOT NULL,
-  "details" TEXT,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "residentId" TEXT NOT NULL,
-  
-  CONSTRAINT "activity_logs_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "activity_logs_residentId_fkey" FOREIGN KEY ("residentId") REFERENCES "residents"("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-CREATE INDEX "activity_logs_residentId_idx" ON "activity_logs"("residentId");
+CREATE POLICY "Authenticated users can delete residents"
+  ON residents FOR DELETE USING (auth.role() = 'authenticated');
 
--- 8. Device Tokens table (for FCM push notifications)
-CREATE TABLE "device_tokens" (
-  "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
-  "token" TEXT NOT NULL,
-  "userAgent" TEXT,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "userId" TEXT NOT NULL,
-  
-  CONSTRAINT "device_tokens_pkey" PRIMARY KEY ("id"),
-  CONSTRAINT "device_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
+-- 2. Daily Logs table
+CREATE TABLE daily_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  resident_id UUID NOT NULL REFERENCES residents(id) ON DELETE CASCADE,
+  caretaker_id UUID NOT NULL REFERENCES auth.users(id),
+  status TEXT NOT NULL CHECK (status IN ('good', 'fair', 'poor', 'critical')),
+  meal_taken BOOLEAN DEFAULT false,
+  medication_taken BOOLEAN DEFAULT false,
+  mood TEXT CHECK (mood IN ('happy', 'neutral', 'sad', 'agitated')),
+  notes TEXT,
+  whatsapp_sent BOOLEAN DEFAULT false,
+  logged_at TIMESTAMPTZ DEFAULT now()
 );
-CREATE UNIQUE INDEX "device_tokens_token_key" ON "device_tokens"("token");
-CREATE INDEX "device_tokens_userId_idx" ON "device_tokens"("userId");
+
+ALTER TABLE daily_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can read logs"
+  ON daily_logs FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Caretakers can insert own logs"
+  ON daily_logs FOR INSERT WITH CHECK (auth.uid() = caretaker_id);
+
+-- 3. Indexes for performance
+CREATE INDEX daily_logs_resident_idx ON daily_logs(resident_id);
+CREATE INDEX daily_logs_caretaker_idx ON daily_logs(caretaker_id);
+CREATE INDEX daily_logs_logged_at_idx ON daily_logs(logged_at DESC);
 
 -- ============================================
--- ✅ Schema created successfully!
--- Your tables: users, residents, medications, 
--- health_records, medicine_scans, activity_logs, device_tokens
+-- ✅ Done! 2 tables: residents, daily_logs
+-- Auth handled by Supabase Auth (no extra table)
+-- WhatsApp via wa.me links (zero cost)
 -- ============================================

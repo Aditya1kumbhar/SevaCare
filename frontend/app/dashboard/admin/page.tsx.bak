@@ -1,0 +1,96 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Settings, ShieldCheck, Mail, User, Clock, Bell, LogOut, Moon } from 'lucide-react'
+
+export default function AdminPage() {
+  const [user, setUser] = useState<any>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    loadUser()
+  }, [])
+
+  return (
+    <div className="space-y-6 max-w-2xl mx-auto bg-black min-h-screen">
+      <div className="border-b-2 border-zinc-900 pb-4 mb-6">
+        <h2 className="text-2xl font-bold tracking-widest uppercase text-white flex items-center gap-2">
+          <Settings className="w-6 h-6 text-zinc-400" /> SYSTEM PREFERENCES
+        </h2>
+        <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mt-2 border-l-2 border-zinc-800 pl-2">
+          ADMINISTRATOR ACCESS GRANTED
+        </p>
+      </div>
+
+      <div className="bg-black border-2 border-zinc-900 p-6 space-y-4">
+        <h3 className="text-sm font-bold tracking-widest uppercase text-white border-b-2 border-zinc-900 pb-2 mb-4 flex items-center gap-2">
+          <User className="w-4 h-4 text-blue-500" /> PROFILE IDENTITY MATRIX
+        </h3>
+        <div className="space-y-0 border-2 border-zinc-800">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-950/30">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-1"><Mail className="w-3 h-3"/> EMAIL ADDRESS</label>
+            <p className="text-white text-sm font-mono bg-black p-3 border-2 border-zinc-800">
+              {user?.email || 'RETRIEVING...'}
+            </p>
+          </div>
+          <div className="p-4 border-b border-zinc-800 bg-zinc-950/30">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-1"><ShieldCheck className="w-3 h-3"/> USER IDENTIFICATION KEY</label>
+            <p className="text-zinc-400 text-sm font-mono bg-black p-3 border-2 border-zinc-800 break-all select-all">{user?.id || '...'}</p>
+          </div>
+          <div className="p-4 bg-zinc-950/30">
+            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-1"><Clock className="w-3 h-3"/> LAST SESSION ESTABLISHED</label>
+            <p className="text-zinc-400 text-sm font-mono bg-black p-3 border-2 border-zinc-800">
+              {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata'}).toUpperCase() : 'NO RECORD FOUND'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-black border-2 border-zinc-900 p-6 space-y-4">
+        <h3 className="text-sm font-bold tracking-widest uppercase text-white border-b-2 border-zinc-900 pb-2 mb-4 flex items-center gap-2">
+          <Settings className="w-4 h-4 text-purple-500" /> APPLICATION PARAMETERS
+        </h3>
+        <div className="space-y-0 border-2 border-zinc-800">
+          <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-950/30">
+            <div>
+              <p className="text-white font-bold tracking-widest uppercase text-xs flex items-center gap-2"><Moon className="w-3 h-3"/> HIGH-CONTRAST MODE</p>
+              <p className="text-[10px] font-mono text-zinc-500 mt-1">DEFAULT OVERRIDE ENGAGED</p>
+            </div>
+            <div className="w-12 h-6 border-2 border-green-500 bg-green-950 flex items-center justify-end px-1">
+              <div className="w-3 h-3 bg-green-500"></div>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-950/30">
+            <div>
+              <p className="text-white font-bold tracking-widest uppercase text-xs flex items-center gap-2"><Bell className="w-3 h-3"/> PRIORITY ALERTS</p>
+              <p className="text-[10px] font-mono text-zinc-500 mt-1">EMERGENCY NOTIFICATIONS ACTIVE</p>
+            </div>
+            <div className="w-12 h-6 border-2 border-green-500 bg-green-950 flex items-center justify-end px-1">
+              <div className="w-3 h-3 bg-green-500"></div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-zinc-950/30">
+            <div>
+              <p className="text-white font-bold tracking-widest uppercase text-xs flex items-center gap-2"><LogOut className="w-3 h-3"/> SESSION TIMEOUT</p>
+              <p className="text-[10px] font-mono text-zinc-500 mt-1">AUTO-TERMINATE AFTER 30M INACTIVITY</p>
+            </div>
+            <div className="w-12 h-6 border-2 border-zinc-700 bg-zinc-900 flex items-center justify-start px-1">
+              <div className="w-3 h-3 bg-zinc-500"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="text-center pt-8 border-t-2 border-zinc-900">
+        <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">SEVACARE PLATFORM V1.1.0 // CLINICAL BUILD</p>
+      </div>
+    </div>
+  )
+}

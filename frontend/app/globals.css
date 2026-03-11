@@ -4,122 +4,78 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f1f3f6;
-  --foreground: #212121;
+  --background: #ffffff;
+  --foreground: #000000;
   --card: #ffffff;
-  --card-foreground: #212121;
+  --card-foreground: #000000;
   --popover: #ffffff;
-  --popover-foreground: #212121;
-  --primary: #2874f0;
+  --popover-foreground: #000000;
+  --primary: #000000;
   --primary-foreground: #ffffff;
-  --secondary: #f1f3f6;
-  --secondary-foreground: #212121;
-  --muted: #f1f3f6;
-  --muted-foreground: #878787;
-  --accent: #ff9f00;
+  --secondary: #e4e4e7;
+  --secondary-foreground: #000000;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #000000;
+  --input: #e4e4e7;
+  --ring: #000000;
+  --radius: 0rem;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #27272a;
+  --secondary-foreground: #ffffff;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
   --accent-foreground: #ffffff;
-  --destructive: #ff6161;
-  --destructive-foreground: #ff6161;
-  --border: #e0e0e0;
-  --input: #e0e0e0;
-  --ring: #2874f0;
-  --chart-1: #2874f0;
-  --chart-2: #ff9f00;
-  --chart-3: #388e3c;
-  --chart-4: #ff6161;
-  --chart-5: #fb641b;
-  --radius: 0.25rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #212121;
-  --sidebar-primary: #2874f0;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f3f6;
-  --sidebar-accent-foreground: #212121;
-  --sidebar-border: #e0e0e0;
-  --sidebar-ring: #2874f0;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #ffffff;
 }
 
-@theme inline {
-  --font-sans: var(--font-roboto), 'Roboto', system-ui, sans-serif;
-  --font-mono: var(--font-roboto), 'Roboto', monospace;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 6px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-flipkart-blue: #2874f0;
-  --color-flipkart-blue-dark: #1a5dc8;
-  --color-flipkart-yellow: #ffe500;
-  --color-flipkart-orange: #fb641b;
-  --color-flipkart-green: #388e3c;
-  --color-flipkart-gray: #f1f3f6;
-  --color-flipkart-text: #212121;
-  --color-flipkart-text-light: #878787;
+:root {
+  --font-sans: 'Roboto', system-ui, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  html {
-    @apply touch-manipulation;
-  }
-  body {
-    @apply bg-background text-foreground overflow-x-hidden;
-    font-size-adjust: 100%;
-  }
-  img,
-  video,
-  iframe {
-    @apply max-w-full h-auto;
-    display: block;
-  }
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="password"],
-  textarea,
-  select {
-    @apply text-base;
-    font-size: 16px;
-  }
-  /* Prevent double-tap zoom on buttons */
-  button,
-  a,
-  input[type="submit"],
-  input[type="button"],
-  input[type="reset"] {
-    @apply touch-manipulation;
-  }
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  font-size-adjust: 100%;
 }
+
+* {
+  border-color: var(--border);
+  outline-color: rgba(255, 255, 255, 0.5);
+}
+
+html, button, a, input[type="submit"], input[type="button"], input[type="reset"] {
+  touch-action: manipulation;
+}
+
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea, select {
+  font-size: 16px;
+}
+
