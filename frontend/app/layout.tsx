@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'SevaCare - Elder Care Management',
   description: 'A comprehensive caretaker management application for old age homes. Manage residents, track health information, and provide compassionate care.',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       {
