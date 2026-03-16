@@ -4,14 +4,15 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Play, Pause, SkipForward, RotateCcw, CheckCircle2, Clock, AlertTriangle, Heart, ChevronLeft, Trophy } from 'lucide-react'
+import { useLanguage } from '@/components/LanguageProvider'
+import { Translate } from '@/components/Translate'
 
-// Same exercise data (must match the activity page)
-const EXERCISES = [
+const getExercises = (t: any) => [
   {
     id: 'neck-rotation',
-    name: 'Neck Rotation',
+    name: t.neckRotation,
     duration: 60,
-    type: 'Warm Up',
+    type: t.warmUp,
     emoji: '🧘',
     color: 'bg-blue-500',
     steps: [
@@ -24,9 +25,9 @@ const EXERCISES = [
   },
   {
     id: 'shoulder-rolls',
-    name: 'Shoulder Rolls',
+    name: t.shoulderRolls,
     duration: 45,
-    type: 'Warm Up',
+    type: t.warmUp,
     emoji: '💪',
     color: 'bg-emerald-500',
     steps: [
@@ -39,9 +40,9 @@ const EXERCISES = [
   },
   {
     id: 'deep-breathing',
-    name: 'Deep Breathing (Pranayama)',
+    name: t.deepBreathing,
     duration: 120,
-    type: 'Yoga',
+    type: t.yoga,
     emoji: '🌬️',
     color: 'bg-purple-500',
     steps: [
@@ -55,9 +56,9 @@ const EXERCISES = [
   },
   {
     id: 'seated-forward-bend',
-    name: 'Seated Forward Bend',
+    name: t.seatedForwardBend,
     duration: 60,
-    type: 'Stretch',
+    type: t.stretch,
     emoji: '🪑',
     color: 'bg-amber-500',
     steps: [
@@ -71,9 +72,9 @@ const EXERCISES = [
   },
   {
     id: 'ankle-rotations',
-    name: 'Ankle Rotations',
+    name: t.ankleRotations,
     duration: 60,
-    type: 'Mobility',
+    type: t.mobility,
     emoji: '🦶',
     color: 'bg-rose-500',
     steps: [
@@ -86,9 +87,9 @@ const EXERCISES = [
   },
   {
     id: 'gentle-arm-raises',
-    name: 'Gentle Arm Raises',
+    name: t.gentleArmRaises,
     duration: 60,
-    type: 'Strength',
+    type: t.strength,
     emoji: '🙌',
     color: 'bg-teal-500',
     steps: [
@@ -103,9 +104,9 @@ const EXERCISES = [
   },
   {
     id: 'seated-twist',
-    name: 'Seated Spinal Twist',
+    name: t.seatedSpinalTwist,
     duration: 60,
-    type: 'Yoga',
+    type: t.yoga,
     emoji: '🔄',
     color: 'bg-indigo-500',
     steps: [
@@ -120,9 +121,9 @@ const EXERCISES = [
   },
   {
     id: 'finger-stretches',
-    name: 'Finger & Wrist Stretches',
+    name: t.fingerWristStretches,
     duration: 45,
-    type: 'Mobility',
+    type: t.mobility,
     emoji: '✋',
     color: 'bg-sky-500',
     steps: [
@@ -147,9 +148,12 @@ export default function PlayModePage() {
   const searchParams = useSearchParams()
   const residentId = searchParams.get('residentId')
   const supabase = createClient()
+  const { t } = useLanguage()
+
+  const EXERCISES = getExercises(t)
   
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(EXERCISES[0].duration)
+  const [timeLeft, setTimeLeft] = useState(EXERCISES[0]?.duration || 60)
   const [isRunning, setIsRunning] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [hasLogged, setHasLogged] = useState(false)
@@ -266,21 +270,21 @@ export default function PlayModePage() {
         <div className="bg-emerald-100 w-24 h-24 rounded-full flex items-center justify-center mb-6 animate-bounce">
           <Trophy className="w-12 h-12 text-emerald-600" />
         </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Well Done!</h2>
-        <p className="text-slate-500 mt-2 max-w-xs">The wellness routine has been completed successfully. Great job staying active!</p>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight"><Translate id="wellDone" fallback="Well Done!" /></h2>
+        <p className="text-slate-500 mt-2 max-w-xs">{t.wellnessRoutineCompleted}</p>
         
         <div className="flex flex-col gap-3 mt-8 w-full max-w-xs">
           <button
             onClick={resetWorkout}
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
           >
-            <RotateCcw className="w-5 h-5" /> Restart Workout
+            <RotateCcw className="w-5 h-5" /> <Translate id="restartWorkout" fallback="Restart Workout" />
           </button>
           <button
             onClick={() => router.push('/dashboard/activity')}
             className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all flex items-center justify-center gap-2"
           >
-            <ChevronLeft className="w-5 h-5" /> Back to Exercises
+            <ChevronLeft className="w-5 h-5" /> <Translate id="backToExercises" fallback="Back to Exercises" />
           </button>
         </div>
       </div>
@@ -314,7 +318,7 @@ export default function PlayModePage() {
           {currentIdx + 1} / {EXERCISES.length}
         </span>
         <button onClick={skipExercise} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1">
-          Skip <SkipForward className="w-4 h-4" />
+          <Translate id="skip" fallback="Skip" /> <SkipForward className="w-4 h-4" />
         </button>
       </div>
 
@@ -349,15 +353,15 @@ export default function PlayModePage() {
           <div className="text-center z-10">
             <p className="text-4xl font-black text-slate-900 tracking-tight font-mono">{formatTimer(timeLeft)}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-              {isRunning ? 'In Progress' : 'Paused'}
+              {isRunning ? t.inProgress : t.paused}
             </p>
           </div>
         </div>
 
         {/* Step-by-Step Guidance — Highlighted Active Step */}
         <div className="w-full text-left space-y-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">Follow Along</p>
-          {currentExercise.steps.map((step, sIdx) => (
+          <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2"><Translate id="followAlong" fallback="Follow Along" /></p>
+          {currentExercise.steps.map((step: any, sIdx: any) => (
             <div
               key={sIdx}
               className={`flex items-start gap-2.5 p-2 rounded-xl transition-all duration-500 ${
@@ -406,7 +410,7 @@ export default function PlayModePage() {
                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30'
             }`}
           >
-            {isRunning ? <><Pause className="w-6 h-6 fill-white" /> PAUSE</> : <><Play className="w-6 h-6 fill-white" /> START</>}
+            {isRunning ? <><Pause className="w-6 h-6 fill-white" /> {t.pauseUpper}</> : <><Play className="w-6 h-6 fill-white" /> {t.startUpper}</>}
           </button>
 
           {/* Skip */}

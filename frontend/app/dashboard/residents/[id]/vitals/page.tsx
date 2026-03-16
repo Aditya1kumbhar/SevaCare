@@ -5,12 +5,15 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Activity, HeartPulse } from 'lucide-react'
+import { useLanguage } from '@/components/LanguageProvider'
+import { Translate } from '@/components/Translate'
 
 export default function LogVitalsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const { t } = useLanguage()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -26,7 +29,7 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
     const notes = form.get('notes') as string
 
     if (!bp && !hr && !temp && !weight && !sugar && !o2 && !notes) {
-      toast.error('Please enter at least one vital sign.')
+      toast.error(t.pleaseEnterAtLeastOneVitalSign)
       setLoading(false)
       return
     }
@@ -51,24 +54,24 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
       const result = await res.json()
 
       if (!res.ok) {
-        toast.error(result.error || 'Failed to secure vitals')
+        toast.error(result.error || t.failedToSecureVitals)
         setLoading(false)
         return
       }
 
       if ((res as any).offline) {
-        toast.info('Vitals saved locally. Will sync when online.', {
+        toast.info(t.vitalsSavedLocally, {
           icon: '☁️'
         })
       } else {
-        toast.success('VITALS SECURED.')
+        toast.success(t.vitalsSecured)
       }
 
       router.push(`/dashboard/residents/${id}`)
       router.refresh()
     } catch (err) {
       console.error(err)
-      toast.error('Connection error. Vitals might not be saved.')
+      toast.error(t.connectionErrorVitals)
     } finally {
       setLoading(false)
     }
@@ -81,10 +84,10 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
     <div className="space-y-6 max-w-xl mx-auto pb-12 bg-slate-50 min-h-screen">
       <div className="border-b border-slate-200 pb-4 mb-6">
         <h2 className="text-2xl font-semibold tracking-tight text-white flex items-center gap-2">
-          <HeartPulse className="w-6 h-6 text-blue-600" /> CLINICAL VITALS ENTRY
+          <HeartPulse className="w-6 h-6 text-blue-600" /> <Translate id="clinicalVitalsEntry" fallback="CLINICAL VITALS ENTRY" />
         </h2>
         <p className="text-slate-500  text-xs uppercase tracking-widest mt-2 border-l-2 border-slate-200 pl-2">
-          RECORD PHYSICAL HEALTH MEASUREMENTS
+          <Translate id="recordPhysicalHealthMeasurements" fallback="RECORD PHYSICAL HEALTH MEASUREMENTS" />
         </p>
       </div>
 
@@ -92,40 +95,40 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>BLOOD PRESSURE</label>
-            <input name="blood_pressure" placeholder="E.G. 120/80" className={inputClass} />
+            <label className={labelClass}><Translate id="bloodPressureUpper" fallback="BLOOD PRESSURE" /></label>
+            <input name="blood_pressure" placeholder={t.bpPlaceholder} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>HEART RATE (BPM)</label>
-            <input name="heart_rate" type="number" placeholder="E.G. 72" min={30} max={250} className={inputClass} />
+            <label className={labelClass}><Translate id="heartRateBpm" fallback="HEART RATE (BPM)" /></label>
+            <input name="heart_rate" type="number" placeholder={t.hrPlaceholder} min={30} max={250} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>TEMPERATURE (°F)</label>
-            <input name="temperature" type="number" step="0.1" placeholder="E.G. 98.6" className={inputClass} />
+            <label className={labelClass}><Translate id="temperatureF" fallback="TEMPERATURE (°F)" /></label>
+            <input name="temperature" type="number" step="0.1" placeholder={t.tempPlaceholder} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>SPO2 LEVEL (%)</label>
-            <input name="oxygen_level" type="number" placeholder="E.G. 98" min={50} max={100} className={inputClass} />
+            <label className={labelClass}><Translate id="spo2Level" fallback="SPO2 LEVEL (%)" /></label>
+            <input name="oxygen_level" type="number" placeholder={t.spo2Placeholder} min={50} max={100} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>BLOOD GLUCOSE (MG/DL)</label>
-            <input name="blood_sugar" type="number" step="0.1" placeholder="E.G. 110" className={inputClass} />
+            <label className={labelClass}><Translate id="bloodGlucoseUpper" fallback="BLOOD GLUCOSE (MG/DL)" /></label>
+            <input name="blood_sugar" type="number" step="0.1" placeholder={t.glucosePlaceholder} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>PATIENT WEIGHT (KG)</label>
-            <input name="weight" type="number" step="0.1" placeholder="E.G. 70.5" className={inputClass} />
+            <label className={labelClass}><Translate id="patientWeight" fallback="PATIENT WEIGHT (KG)" /></label>
+            <input name="weight" type="number" step="0.1" placeholder={t.weightPlaceholder} className={inputClass} />
           </div>
         </div>
 
-        <label className={labelClass}>ADDITIONAL CLINICAL OBSERVATIONS</label>
-        <textarea name="notes" placeholder="ANY ABNORMAL OBSERVATIONS..." rows={3} className={`${inputClass} resize-none mb-6`} />
+        <label className={labelClass}><Translate id="additionalClinicalObservations" fallback="ADDITIONAL CLINICAL OBSERVATIONS" /></label>
+        <textarea name="notes" placeholder={t.observationsPlaceholder} rows={3} className={`${inputClass} resize-none mb-6`} />
 
         <div className="flex gap-0 border border-slate-200 shadow-sm rounded-xl bg-slate-50 mt-6">
           <button type="button" onClick={() => router.back()} className="w-1/3 py-5 text-sm font-semibold tracking-tight bg-slate-50 hover:bg-white text-slate-500 transition-all border-r border-slate-200">
-            ABORT
+            <Translate id="abort" fallback="ABORT" />
           </button>
           <button type="submit" disabled={loading} className="w-2/3 py-5 text-sm font-semibold tracking-tight bg-blue-600 hover:bg-blue-700 text-white disabled:bg-[#e0e0e0] disabled:text-slate-500 transition-all flex items-center justify-center gap-2">
-            {loading ? 'PROCESSING...' : <><Activity className="w-5 h-5"/> COMMUNICATE VITALS</>}
+            {loading ? t.processingUpper : <><Activity className="w-5 h-5"/> <Translate id="communicateVitals" fallback="COMMUNICATE VITALS" /></>}
           </button>
         </div>
       </form>

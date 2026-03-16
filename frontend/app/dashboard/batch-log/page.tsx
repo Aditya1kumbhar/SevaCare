@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Pill, AlertTriangle, Clock, ArrowRight } from 'lucide-react'
+import { useLanguage } from '@/components/LanguageProvider'
+import { Translate } from '@/components/Translate'
 
 type MedAlert = {
   residentId: string
@@ -19,6 +21,7 @@ export default function RemindersPage() {
   const [alerts, setAlerts] = useState<MedAlert[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const { t } = useLanguage()
 
   useEffect(() => {
     async function load() {
@@ -68,15 +71,15 @@ export default function RemindersPage() {
     return () => clearInterval(interval)
   }, [])
 
-  if (loading) return <p className="text-slate-500 text-center py-16 text-sm font-medium">Scanning medication schedules...</p>
+  if (loading) return <p className="text-slate-500 text-center py-16 text-sm font-medium"><Translate id="scanningMedications" fallback="Scanning medication schedules..." /></p>
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto pb-12 bg-slate-50 min-h-screen">
       <div className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200 pb-4 pt-4 mb-6">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-          <AlertTriangle className="w-6 h-6 text-rose-600" /> Action Center: Reminders
+          <AlertTriangle className="w-6 h-6 text-rose-600" /> <Translate id="actionCenterReminders" fallback="Action Center: Reminders" />
         </h2>
-        <p className="text-sm text-slate-500 mt-1">Aggressive monitoring for scheduled medications.</p>
+        <p className="text-sm text-slate-500 mt-1"><Translate id="monitoringMedications" fallback="Aggressive monitoring for scheduled medications." /></p>
       </div>
 
       {alerts.length === 0 ? (
@@ -84,8 +87,8 @@ export default function RemindersPage() {
           <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
              <Pill className="w-8 h-8 text-green-600" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900">All Clear</h3>
-          <p className="text-slate-500 mt-1">No immediate medication actions required.</p>
+          <h3 className="text-lg font-bold text-slate-900"><Translate id="allClear" fallback="All Clear" /></h3>
+          <p className="text-slate-500 mt-1"><Translate id="noImmediateActions" fallback="No immediate medication actions required." /></p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -105,10 +108,10 @@ export default function RemindersPage() {
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                       {alert.residentName} 
-                      {alert.roomNumber && <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">Rm {alert.roomNumber}</span>}
+                      {alert.roomNumber && <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md"><Translate id="rm" fallback="Rm" /> {alert.roomNumber}</span>}
                     </h3>
                     <p className="text-slate-600 font-medium mt-1">
-                      The medication <strong className="text-slate-900">{alert.medName} ({alert.medDosage})</strong> at <strong className="text-slate-900">{alert.medTime}</strong> should be given to the resident.
+                      {t.theMedication} <strong className="text-slate-900">{alert.medName} ({alert.medDosage})</strong> {t.atTime} <strong className="text-slate-900">{alert.medTime}</strong> {t.shouldBeGiven}
                     </p>
                   </div>
                 </div>
@@ -117,7 +120,7 @@ export default function RemindersPage() {
                   <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg ${
                     alert.isOverdue ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
                   }`}>
-                    {alert.isOverdue ? 'Overdue' : 'Upcoming'}
+                    {alert.isOverdue ? <Translate id="overdue" fallback="Overdue" /> : <Translate id="upcoming" fallback="Upcoming" />}
                   </span>
                   <div className="bg-slate-50 p-2 rounded-full group-hover:bg-blue-50 group-hover:text-blue-600 text-slate-400 transition-colors">
                     <ArrowRight className="w-5 h-5" />

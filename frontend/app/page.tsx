@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ShieldAlert } from 'lucide-react'
+import { useLanguage } from '@/components/LanguageProvider'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useLanguage()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,11 +24,11 @@ export default function LoginPage() {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        toast.success('Account created! Check your email to verify.')
+        toast.success(t('accountCreated'))
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        toast.success('Welcome back!')
+        toast.success(t('welcomeBack'))
         router.push('/dashboard')
         router.refresh()
       }
@@ -43,14 +45,14 @@ export default function LoginPage() {
         <div className="text-center pb-6 border-b border-slate-100">
           <ShieldAlert className="w-12 h-12 text-blue-600 mx-auto mb-4" />
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">SevaCare</h1>
-          <p className="mt-2 text-sm font-medium text-slate-500">Caretaker Portal</p>
+          <p className="mt-2 text-sm font-medium text-slate-500">{t('caretakerPortal')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
             <input
               type="email"
-              placeholder="Email Address"
+              placeholder={t('emailAddress')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -58,7 +60,7 @@ export default function LoginPage() {
             />
             <input
               type="password"
-              placeholder="Password"
+              placeholder={t('password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -71,7 +73,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 transition-all rounded-xl shadow-md hover:shadow-lg mt-4"
           >
-            {loading ? 'Authenticating...' : isSignUp ? 'Sign Up' : 'Secure Log In'}
+            {loading ? t('authenticating') : isSignUp ? t('signUp') : t('secureLogIn')}
           </button>
         </form>
 
@@ -79,7 +81,7 @@ export default function LoginPage() {
           onClick={() => setIsSignUp(!isSignUp)}
           className="w-full text-center text-slate-500 hover:text-slate-900 text-xs font-semibold tracking-tight transition-all mt-6"
         >
-          {isSignUp ? 'Already have an account? Log In' : "Need an account? Sign Up"}
+          {isSignUp ? t('alreadyHaveAccount') : t('needAccount')}
         </button>
       </div>
     </div>

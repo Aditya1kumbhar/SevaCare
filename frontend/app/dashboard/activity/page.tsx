@@ -5,14 +5,15 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Play, Clock, Heart, AlertTriangle, ShieldCheck, Flame, UserCircle } from 'lucide-react'
+import { useLanguage } from '@/components/LanguageProvider'
+import { Translate } from '@/components/Translate'
 
-// Curated elderly-safe exercises with detailed step-by-step instructions
-const EXERCISES = [
+const getExercises = (t: any) => [
   {
     id: 'neck-rotation',
-    name: 'Neck Rotation',
+    name: t.neckRotation,
     duration: 60,
-    type: 'Warm Up',
+    type: t.warmUp,
     emoji: '🧘',
     color: 'bg-blue-50 text-blue-600 border-blue-100',
     steps: [
@@ -26,9 +27,9 @@ const EXERCISES = [
   },
   {
     id: 'shoulder-rolls',
-    name: 'Shoulder Rolls',
+    name: t.shoulderRolls,
     duration: 45,
-    type: 'Warm Up',
+    type: t.warmUp,
     emoji: '💪',
     color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
     steps: [
@@ -42,9 +43,9 @@ const EXERCISES = [
   },
   {
     id: 'deep-breathing',
-    name: 'Deep Breathing (Pranayama)',
+    name: t.deepBreathing,
     duration: 120,
-    type: 'Yoga',
+    type: t.yoga,
     emoji: '🌬️',
     color: 'bg-purple-50 text-purple-600 border-purple-100',
     steps: [
@@ -59,9 +60,9 @@ const EXERCISES = [
   },
   {
     id: 'seated-forward-bend',
-    name: 'Seated Forward Bend',
+    name: t.seatedForwardBend,
     duration: 60,
-    type: 'Stretch',
+    type: t.stretch,
     emoji: '🪑',
     color: 'bg-amber-50 text-amber-600 border-amber-100',
     steps: [
@@ -76,9 +77,9 @@ const EXERCISES = [
   },
   {
     id: 'ankle-rotations',
-    name: 'Ankle Rotations',
+    name: t.ankleRotations,
     duration: 60,
-    type: 'Mobility',
+    type: t.mobility,
     emoji: '🦶',
     color: 'bg-rose-50 text-rose-600 border-rose-100',
     steps: [
@@ -92,9 +93,9 @@ const EXERCISES = [
   },
   {
     id: 'gentle-arm-raises',
-    name: 'Gentle Arm Raises',
+    name: t.gentleArmRaises,
     duration: 60,
-    type: 'Strength',
+    type: t.strength,
     emoji: '🙌',
     color: 'bg-teal-50 text-teal-600 border-teal-100',
     steps: [
@@ -110,9 +111,9 @@ const EXERCISES = [
   },
   {
     id: 'seated-twist',
-    name: 'Seated Spinal Twist',
+    name: t.seatedSpinalTwist,
     duration: 60,
-    type: 'Yoga',
+    type: t.yoga,
     emoji: '🔄',
     color: 'bg-indigo-50 text-indigo-600 border-indigo-100',
     steps: [
@@ -128,9 +129,9 @@ const EXERCISES = [
   },
   {
     id: 'finger-stretches',
-    name: 'Finger & Wrist Stretches',
+    name: t.fingerWristStretches,
     duration: 45,
-    type: 'Mobility',
+    type: t.mobility,
     emoji: '✋',
     color: 'bg-sky-50 text-sky-600 border-sky-100',
     steps: [
@@ -151,12 +152,14 @@ function formatTime(s: number) {
   return m > 0 ? `${m}:${sec.toString().padStart(2, '0')}` : `00:${sec.toString().padStart(2, '0')}`
 }
 
-const totalDuration = EXERCISES.reduce((a, e) => a + e.duration, 0)
-
 export default function ActivityPage() {
   const [residents, setResidents] = useState<any[]>([])
   const [selectedResidentId, setSelectedResidentId] = useState<string>('')
   const supabase = createClient()
+  const { t } = useLanguage()
+
+  const EXERCISES = getExercises(t)
+  const totalDuration = EXERCISES.reduce((a, e) => a + e.duration, 0)
 
   useEffect(() => {
     async function fetchResidents() {
@@ -181,17 +184,17 @@ export default function ActivityPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
-          <p className="text-emerald-400 text-xs font-bold tracking-widest uppercase">Daily Wellness</p>
-          <h2 className="text-white text-2xl sm:text-3xl font-black tracking-tight mt-1">Gentle Care Routine</h2>
+          <p className="text-emerald-400 text-xs font-bold tracking-widest uppercase"><Translate id="dailyWellness" fallback="Daily Wellness" /></p>
+          <h2 className="text-white text-2xl sm:text-3xl font-black tracking-tight mt-1"><Translate id="gentleCareRoutine" fallback="Gentle Care Routine" /></h2>
           <div className="flex items-center gap-4 mt-3">
             <span className="text-white/80 text-xs font-semibold flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" /> {Math.ceil(totalDuration / 60)} min
+              <Clock className="w-3.5 h-3.5" /> {Math.ceil(totalDuration / 60)} {t.minutes}
             </span>
             <span className="text-white/80 text-xs font-semibold flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5" /> {EXERCISES.length} Exercises
+              <Flame className="w-3.5 h-3.5" /> {EXERCISES.length} {t.exercisesCount}
             </span>
             <span className="text-white/80 text-xs font-semibold flex items-center gap-1.5">
-              <Heart className="w-3.5 h-3.5" /> Low Impact
+              <Heart className="w-3.5 h-3.5" /> <Translate id="lowImpact" fallback="Low Impact" />
             </span>
           </div>
         </div>
@@ -203,9 +206,9 @@ export default function ActivityPage() {
           <ShieldCheck className="w-4 h-4 text-amber-700" />
         </div>
         <div>
-          <p className="text-sm font-bold text-amber-800">Health & Safety Notice</p>
+          <p className="text-sm font-bold text-amber-800"><Translate id="healthSafetyNotice" fallback="Health & Safety Notice" /></p>
           <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-            These exercises are designed for elderly residents. If the resident has <strong>heart disease, hypertension, recent surgery, severe arthritis, or balance issues</strong>, consult a doctor before starting. Stop immediately if any pain, dizziness, or breathlessness occurs.
+            {t.healthSafetyDesc}
           </p>
         </div>
       </div>
@@ -245,16 +248,16 @@ export default function ActivityPage() {
           
           <div className="mb-4">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-2">
-              <UserCircle className="w-4 h-4" /> Who is exercising?
+              <UserCircle className="w-4 h-4" /> <Translate id="whoIsExercising" fallback="Who is exercising?" />
             </label>
             <select
               value={selectedResidentId}
               onChange={(e) => setSelectedResidentId(e.target.value)}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:border-blue-500 transition-all appearance-none"
             >
-              <option value="">Select Resident (Optional)</option>
+              <option value="">{t.selectResidentOptional}</option>
               {residents.map(r => (
-                <option key={r.id} value={r.id}>{r.name} {r.room_number ? `(Room ${r.room_number})` : ''}</option>
+                <option key={r.id} value={r.id}>{r.name} {r.room_number ? `(${t.rm} ${r.room_number})` : ''}</option>
               ))}
             </select>
           </div>
@@ -263,7 +266,7 @@ export default function ActivityPage() {
             href={selectedResidentId ? `/dashboard/activity/play?residentId=${selectedResidentId}` : `/dashboard/activity/play`}
             className="flex items-center justify-center gap-3 w-full py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-lg font-bold tracking-tight rounded-2xl shadow-md shadow-blue-600/30 transition-all hover:scale-[1.02]"
           >
-            <Play className="w-6 h-6 fill-white" /> START WORKOUT
+            <Play className="w-6 h-6 fill-white" /> <Translate id="startWorkout" fallback="START WORKOUT" />
           </Link>
         </div>
       </div>
