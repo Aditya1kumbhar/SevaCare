@@ -25,7 +25,7 @@ export default function SyncStatusIndicator() {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold animate-pulse border border-blue-100 italic">
         <CloudSync className="w-3.5 h-3.5" />
-        {t('syncing')} {syncingCount}...
+        {t.syncing} {syncingCount}...
       </div>
     )
   }
@@ -34,7 +34,7 @@ export default function SyncStatusIndicator() {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100">
         <CloudOff className="w-3.5 h-3.5" />
-        {pendingCount} {t('pendingSync')}
+        {pendingCount} {t.pendingSync}
       </div>
     )
   }
@@ -42,7 +42,7 @@ export default function SyncStatusIndicator() {
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold border border-emerald-100 opacity-60">
       <CheckCircle2 className="w-3.5 h-3.5" />
-      {t('cloudSynced')}
+      {t.cloudSynced}
     </div>
   )
 }

@@ -3,10 +3,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { translations, Language } from '@/lib/translations';
 
+type TranslationsMap = typeof translations['en'];
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: keyof typeof translations['en']) => string;
+  t: TranslationsMap;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -29,9 +31,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('sevacare_language', lang);
   };
 
-  const t = (key: keyof typeof translations['en']) => {
-    return translations[language][key] || translations['en'][key] || key;
-  };
+  // Expose translations as an object so components can use t.key syntax
+  const t = translations[language];
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

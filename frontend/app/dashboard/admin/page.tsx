@@ -88,7 +88,7 @@ export default function AdminPage() {
               <Info className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">{t('appInfo')}</p>
+              <p className="text-sm font-bold text-slate-800">{t.appInfo}</p>
               <p className="text-xs text-slate-500">v1.1.0 Enterprise</p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function AdminPage() {
 
         {/* Language Switcher */}
         <div className="p-4 bg-slate-50 border-t border-slate-100">
-          <p className="text-sm font-bold text-slate-800 mb-3">{t('language')}</p>
+          <p className="text-sm font-bold text-slate-800 mb-3">{t.language}</p>
           <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <button 
               onClick={() => setLanguage('en')}
