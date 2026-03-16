@@ -53,7 +53,8 @@ export default function LogStatusPage({ params }: { params: Promise<{ residentId
     setLoading(true)
 
     try {
-      const res = await fetch('/api/log-status', {
+      const { smartFetch } = await import('@/lib/offline-db')
+      const res = await smartFetch('/api/log-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -74,14 +75,18 @@ export default function LogStatusPage({ params }: { params: Promise<{ residentId
         return
       }
 
-      toast.success('Status logged!')
-
-      // Redirect back to dashboard
-
+      if ((res as any).offline) {
+        toast.info('Saved locally. Will sync when online.', {
+          icon: '☁️',
+        })
+      } else {
+        toast.success('Status logged!')
+      }
 
       router.push('/dashboard')
       router.refresh()
-    } catch {
+    } catch (err) {
+      console.error(err)
       toast.error('Something went wrong')
     } finally {
       setLoading(false)

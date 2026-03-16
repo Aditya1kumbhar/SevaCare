@@ -31,24 +31,47 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
       return
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { smartFetch } = await import('@/lib/offline-db')
+      const res = await smartFetch('/api/log-vitals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resident_id: id,
+          blood_pressure: bp || null,
+          heart_rate: hr ? parseInt(hr) : null,
+          temperature: temp ? parseFloat(temp) : null,
+          weight: weight ? parseFloat(weight) : null,
+          blood_sugar: sugar ? parseFloat(sugar) : null,
+          oxygen_level: o2 ? parseInt(o2) : null,
+          notes: notes || null
+        }),
+      })
 
-    const { error } = await supabase.from('health_records').insert({
-      resident_id: id,
-      recorded_by: user?.id,
-      blood_pressure: bp || null,
-      heart_rate: hr ? parseInt(hr) : null,
-      temperature: temp ? parseFloat(temp) : null,
-      weight: weight ? parseFloat(weight) : null,
-      blood_sugar: sugar ? parseFloat(sugar) : null,
-      oxygen_level: o2 ? parseInt(o2) : null,
-      notes: notes || null
-    })
+      const result = await res.json()
 
-    if (error) { toast.error(error.message); setLoading(false); return }
-    toast.success('VITALS SECURED.')
-    router.push(`/dashboard/residents/${id}`)
-    router.refresh()
+      if (!res.ok) {
+        toast.error(result.error || 'Failed to secure vitals')
+        setLoading(false)
+        return
+      }
+
+      if ((res as any).offline) {
+        toast.info('Vitals saved locally. Will sync when online.', {
+          icon: '☁️'
+        })
+      } else {
+        toast.success('VITALS SECURED.')
+      }
+
+      router.push(`/dashboard/residents/${id}`)
+      router.refresh()
+    } catch (err) {
+      console.error(err)
+      toast.error('Connection error. Vitals might not be saved.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inputClass = "w-full px-4 py-4 text-base bg-slate-50 border border-slate-200 shadow-sm rounded-xl text-slate-900 placeholder-zinc-500 focus:outline-none focus:border-blue-600 transition-all rounded-xl shadow-sm  uppercase"

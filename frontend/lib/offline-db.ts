@@ -44,13 +44,38 @@ export async function queueRequestForSync(url: string, method: string, body?: an
   });
 }
 
+/**
+ * Smart Fetch: Tries to fetch normally, if offline or network fails, queues for sync.
+ */
+export async function smartFetch(url: string, options: RequestInit) {
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    await queueRequestForSync(url, options.method || 'GET', options.body ? JSON.parse(options.body as string) : null, options.headers);
+    return { ok: true, offline: true, json: async () => ({ message: 'Saved locally. Will sync when online.' }) };
+  }
+
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+       // If it's a 5xx error, we might want to queue it too? 
+       // For now, let's only queue on true network failure or offline state.
+    }
+    return response;
+  } catch (error) {
+    console.error("Fetch failed, queuing for offline sync", error);
+    await queueRequestForSync(url, options.method || 'GET', options.body ? JSON.parse(options.body as string) : null, options.headers);
+    return { ok: true, offline: true, json: async () => ({ message: 'Network failed. Saved locally.' }) };
+  }
+}
+
 // Helper to sync when back online
 export async function processSyncQueue() {
-  if (!navigator.onLine) return;
+  if (typeof window === 'undefined' || !navigator.onLine) return;
 
   const pendingItems = await db.syncQueue.where('status').equals('pending').toArray();
   
   if (pendingItems.length === 0) return;
+
+  console.log(`Attempting to sync ${pendingItems.length} items...`);
 
   for (const item of pendingItems) {
     try {
@@ -65,16 +90,14 @@ export async function processSyncQueue() {
       });
 
       if (response.ok && item.id) {
-        // Success - remove from queue
         await db.syncQueue.delete(item.id);
+        console.log("Successfully synced item", item.url);
       } else if (item.id) {
-        // Failed - mark as failed
         await db.syncQueue.update(item.id, { status: 'failed' });
       }
     } catch (error) {
        console.error("Failed to sync item", item, error);
        if (item.id) {
-         // Keep pending if it was a network error so it retries later
          await db.syncQueue.update(item.id, { status: 'pending' });
        }
     }
@@ -86,4 +109,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     processSyncQueue();
   });
+  
+  // Also try to sync on initial load if online
+  if (navigator.onLine) {
+    processSyncQueue();
+  }
 }

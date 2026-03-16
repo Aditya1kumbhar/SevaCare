@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Users, LayoutDashboard, Settings, UserCircle, LogOut, ShieldAlert, Bell, Dumbbell } from 'lucide-react'
+import { Users, LayoutDashboard, Settings, UserCircle, LogOut, ShieldAlert, Bell, Dumbbell, Cloud } from 'lucide-react'
 import NavRemindersBadge from './NavRemindersBadge'
+import SyncStatusIndicator from './SyncStatusIndicator'
 
 const NAV_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, mobile: true },
@@ -40,7 +41,8 @@ export default async function DashboardLayout({
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">SevaCare</h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5 truncate">{user.email}</p>
+            <p className="text-xs font-medium text-slate-500 mt-0.5 truncate mb-2">{user.email}</p>
+            <SyncStatusIndicator />
           </div>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
@@ -85,9 +87,12 @@ export default async function DashboardLayout({
              </div>
            </div>
            
-           <Link href="/dashboard/admin" className="p-2.5 bg-white border border-slate-200 shadow-sm rounded-full text-slate-500 hover:text-blue-600 transition-colors z-20">
-             <Settings className="w-5 h-5" />
-           </Link>
+           <div className="flex items-center gap-2 z-20">
+             <SyncStatusIndicator />
+             <Link href="/dashboard/admin" className="p-2.5 bg-white border border-slate-200 shadow-sm rounded-full text-slate-500 hover:text-blue-600 transition-colors">
+               <Settings className="w-5 h-5" />
+             </Link>
+           </div>
         </div>
 
         <div className="max-w-5xl mx-auto">{children}</div>
