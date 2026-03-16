@@ -48,9 +48,10 @@ export default async function DashboardLayout({
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all"
+              prefetch={true}
+              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-300 ease-out active:scale-[0.98]"
             >
-              <div className="relative flex items-center justify-center p-1">
+              <div className="relative flex items-center justify-center p-1 transition-transform duration-300 ease-out group-hover:scale-110">
                 <item.icon className="w-5 h-5" />
                 {item.name === 'Reminders' && <NavRemindersBadge />}
               </div>
@@ -96,15 +97,16 @@ export default async function DashboardLayout({
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200 z-50 flex items-center justify-around pb-safe">
         {NAV_ITEMS.filter(item => item.mobile).map((item) => (
           <Link
-            key={item.href}
-            href={item.href}
-            className="flex flex-col items-center justify-center gap-1 w-full py-3 text-slate-500 hover:text-blue-600 active:bg-slate-50 transition-colors"
+             key={item.href}
+             href={item.href}
+             prefetch={true}
+             className="flex flex-col items-center justify-center gap-1 w-full py-3 text-slate-500 hover:text-blue-600 active:bg-slate-50 transition-all duration-300 ease-out active:scale-95"
           >
-            <div className="relative flex items-center justify-center pt-2">
-              <item.icon className="w-6 h-6 mb-0.5" />
-              {item.name === 'Reminders' && <NavRemindersBadge />}
-            </div>
-            <span className="text-[10px] font-bold tracking-wide">{item.name}</span>
+             <div className="relative flex items-center justify-center pt-2 transition-transform duration-300 ease-out">
+               <item.icon className="w-6 h-6 mb-0.5" />
+               {item.name === 'Reminders' && <NavRemindersBadge />}
+             </div>
+             <span className="text-[10px] font-bold tracking-wide">{item.name}</span>
           </Link>
         ))}
       </nav>
