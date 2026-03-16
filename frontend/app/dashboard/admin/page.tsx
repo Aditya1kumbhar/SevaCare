@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Settings, ShieldCheck, Bell, LogOut, Moon, ChevronRight, UserCircle, Info } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useLanguage } from '@/components/LanguageProvider'
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null)
   const supabase = createClient()
   const router = useRouter()
+  const { language, setLanguage, t } = useLanguage()
 
   useEffect(() => {
     async function loadUser() {
@@ -80,17 +82,42 @@ export default function AdminPage() {
         </div>
 
         {/* App Info */}
-        <div className="flex items-center justify-between p-4 active:bg-slate-50 transition-colors cursor-pointer">
+        <div className="flex items-center justify-between p-4 border-b border-slate-50 active:bg-slate-50 transition-colors cursor-pointer">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
               <Info className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">App Info</p>
+              <p className="text-sm font-bold text-slate-800">{t('appInfo')}</p>
               <p className="text-xs text-slate-500">v1.1.0 Enterprise</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-slate-300" />
+        </div>
+
+        {/* Language Switcher */}
+        <div className="p-4 bg-slate-50 border-t border-slate-100">
+          <p className="text-sm font-bold text-slate-800 mb-3">{t('language')}</p>
+          <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <button 
+              onClick={() => setLanguage('en')}
+              className={`flex-1 py-2.5 text-xs font-bold transition-colors ${language === 'en' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              English
+            </button>
+            <button 
+              onClick={() => setLanguage('hi')}
+              className={`flex-1 py-2.5 text-xs font-bold border-l border-r border-slate-200 transition-colors ${language === 'hi' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              हिन्दी
+            </button>
+            <button 
+              onClick={() => setLanguage('mr')}
+              className={`flex-1 py-2.5 text-xs font-bold transition-colors ${language === 'mr' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+            >
+              मराठी
+            </button>
+          </div>
         </div>
 
       </div>

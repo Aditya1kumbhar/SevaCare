@@ -5,13 +5,17 @@ import Image from 'next/image'
 import { Users, LayoutDashboard, Settings, UserCircle, LogOut, ShieldAlert, Bell, Dumbbell, Cloud } from 'lucide-react'
 import NavRemindersBadge from './NavRemindersBadge'
 import SyncStatusIndicator from './SyncStatusIndicator'
+import { Translate } from '@/components/Translate'
+import { translations } from '@/lib/translations'
 
-const NAV_ITEMS = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, mobile: true },
-  { name: 'Residents', href: '/dashboard/residents', icon: Users, mobile: true },
-  { name: 'Activity', href: '/dashboard/activity', icon: Dumbbell, mobile: true },
-  { name: 'Reminders', href: '/dashboard/batch-log', icon: Bell, mobile: true },
-  { name: 'System Config', href: '/dashboard/admin', icon: Settings, mobile: false },
+type TranslationKey = keyof typeof translations['en']
+
+const NAV_ITEMS: { name: string; tKey: TranslationKey; href: string; icon: any; mobile: boolean }[] = [
+  { name: 'Dashboard', tKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard, mobile: true },
+  { name: 'Residents', tKey: 'residents', href: '/dashboard/residents', icon: Users, mobile: true },
+  { name: 'Activity', tKey: 'activity', href: '/dashboard/activity', icon: Dumbbell, mobile: true },
+  { name: 'Reminders', tKey: 'reminders', href: '/dashboard/batch-log', icon: Bell, mobile: true },
+  { name: 'System Config', tKey: 'systemConfig', href: '/dashboard/admin', icon: Settings, mobile: false },
 ]
 
 export default async function DashboardLayout({
@@ -57,7 +61,7 @@ export default async function DashboardLayout({
                 <item.icon className="w-5 h-5" />
                 {item.name === 'Reminders' && <NavRemindersBadge />}
               </div>
-              {item.name}
+              <Translate id={item.tKey} fallback={item.name} />
             </Link>
           ))}
         </nav>
@@ -67,7 +71,7 @@ export default async function DashboardLayout({
               type="submit"
               className="w-full px-4 py-3 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left flex items-center gap-3"
             >
-              <LogOut className="w-5 h-5" /> Log Out
+              <LogOut className="w-5 h-5" /> <Translate id="logOut" fallback="Log Out" />
             </button>
           </form>
         </div>
@@ -111,7 +115,7 @@ export default async function DashboardLayout({
                <item.icon className="w-6 h-6 mb-0.5" />
                {item.name === 'Reminders' && <NavRemindersBadge />}
              </div>
-             <span className="text-[10px] font-bold tracking-wide">{item.name}</span>
+             <span className="text-[10px] font-bold tracking-wide"><Translate id={item.tKey} fallback={item.name} /></span>
           </Link>
         ))}
       </nav>

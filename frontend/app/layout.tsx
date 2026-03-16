@@ -41,6 +41,8 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
+import { LanguageProvider } from '@/components/LanguageProvider'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,8 +51,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning className={`${roboto.variable} font-sans antialiased w-full max-w-full overflow-x-hidden`}>
-        {children}
-        <Toaster position="top-center" richColors />
+        <LanguageProvider>
+          {children}
+          <Toaster position="top-center" richColors />
+        </LanguageProvider>
         <Analytics />
         <script
           dangerouslySetInnerHTML={{
