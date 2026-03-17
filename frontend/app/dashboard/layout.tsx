@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Users, LayoutDashboard, Settings, UserCircle, LogOut, ShieldAlert, Bell, Dumbbell, Cloud } from 'lucide-react'
 import NavRemindersBadge from './NavRemindersBadge'
 import SyncStatusIndicator from './SyncStatusIndicator'
+import EmergencyListener from '@/components/EmergencyListener'
 import { Translate } from '@/components/Translate'
 import { translations } from '@/lib/translations'
 
@@ -100,6 +101,7 @@ export default async function DashboardLayout({
         </div>
 
         <div className="max-w-5xl mx-auto">{children}</div>
+        <EmergencyListener />
       </main>
 
       {/* Mobile Bottom Navigation (WhatsApp / Instagram style) */}

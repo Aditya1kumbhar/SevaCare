@@ -115,3 +115,24 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Emergency notification click handler — opens the emergency page
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a window is already open, focus it and navigate
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          client.navigate('/dashboard/emergency');
+          return;
+        }
+      }
+      // Otherwise, open a new window
+      if (self.clients.openWindow) {
+        return self.clients.openWindow('/dashboard/emergency');
+      }
+    })
+  );
+});
