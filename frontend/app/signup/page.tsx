@@ -8,9 +8,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useLanguage } from '@/components/LanguageProvider'
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -18,14 +20,25 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match!')
+      return
+    }
+    
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName }
+        }
+      })
       if (error) throw error
-      toast.success(t.welcomeBack)
-      router.push('/dashboard')
-      router.refresh()
+      toast.success(t.accountCreated)
+      router.push('/')
     } catch (error: any) {
       toast.error(error.message)
     } finally {
@@ -39,23 +52,33 @@ export default function LoginPage() {
       {/* Main Card */}
       <div className="w-full max-w-[350px] bg-white border border-slate-200 rounded-2xl p-10 shadow-sm">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6">
           <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-slate-100 shadow-md mb-5 bg-white flex items-center justify-center">
             <Image src="/logo.png" alt="SevaCare Logo" width={80} height={80} className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">SevaCare</h1>
-          <p className="text-sm text-slate-500 mt-1.5 font-medium text-center">{t.caretakerPortal}</p>
+          <p className="text-sm text-slate-500 mt-2 font-medium text-center leading-snug px-4">
+            Sign up to manage and care for your elderly residents
+          </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+            className="w-full px-3.5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+          />
           <input
             type="email"
             placeholder={t.emailAddress}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3.5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full px-3.5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           />
           <input
             type="password"
@@ -64,36 +87,38 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-3.5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full px-3.5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={6}
+            className="w-full px-3.5 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all rounded-lg mt-2"
+            className="w-full py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-all rounded-lg mt-2"
           >
-            {loading ? t.authenticating : t.secureLogIn}
+            {loading ? t.authenticating : t.signUp}
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-xs font-semibold text-slate-400 uppercase">OR</span>
-          <div className="flex-1 h-px bg-slate-200" />
-        </div>
-
-        {/* Forgot Password (cosmetic) */}
-        <p className="text-center text-xs text-blue-600 font-semibold cursor-pointer hover:text-blue-800 transition-colors">
-          Forgot password?
+        {/* Terms */}
+        <p className="text-[10px] text-slate-400 text-center mt-5 leading-relaxed px-2">
+          By signing up, you agree to our <span className="text-slate-600 font-semibold">Terms of Service</span> and <span className="text-slate-600 font-semibold">Privacy Policy</span>.
         </p>
       </div>
 
-      {/* Sign Up Card */}
+      {/* Login Card */}
       <div className="w-full max-w-[350px] bg-white border border-slate-200 rounded-2xl p-5 mt-3 text-center shadow-sm">
         <p className="text-sm text-slate-600">
-          {t.needAccount}{' '}
-          <Link href="/signup" className="text-blue-600 font-bold hover:text-blue-800 transition-colors">
-            Sign up
+          {t.alreadyHaveAccount}{' '}
+          <Link href="/" className="text-blue-600 font-bold hover:text-blue-800 transition-colors">
+            Log in
           </Link>
         </p>
       </div>
