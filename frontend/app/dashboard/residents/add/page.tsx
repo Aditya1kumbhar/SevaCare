@@ -9,6 +9,7 @@ const ALLERGY_OPTIONS = ['None', 'Penicillin', 'Sulfa Drugs', 'Nuts', 'Latex', '
 const MOBILITY_OPTIONS = ['Independent', 'Assisted', 'Bedridden']
 const CONDITION_OPTIONS = ['None', 'Diabetes', 'Heart Disease', 'Asthma', 'Hypertension', 'Other']
 const COMMUNICATION_OPTIONS = ['Clear', 'Hard of Hearing', 'Non-Verbal', 'Dementia-Impaired']
+const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
 export default function AddResidentPage() {
   const [loading, setLoading] = useState(false)
@@ -58,6 +59,7 @@ export default function AddResidentPage() {
       name: form.get('name'),
       age: parseInt(form.get('age') as string),
       room_number: form.get('room_number') || null,
+      blood_group: form.get('blood_group') || null,
       family_contact_name: form.get('family_contact_name'),
       family_phone_number: form.get('family_phone_number'),
       
@@ -96,9 +98,13 @@ export default function AddResidentPage() {
         <div className={sectionClass}>
           <h3 className="text-sm font-semibold tracking-tight text-slate-900 border-b border-slate-100 pb-3 mb-4">1. Basic Identity</h3>
           <input name="name" placeholder="Full Legal Name *" required className={inputClass} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <input name="age" type="number" placeholder="Age *" required min={1} max={150} className={inputClass} />
             <input name="room_number" placeholder="Room Number" className={inputClass} />
+            <select name="blood_group" className={inputClass}>
+              <option value="">Blood Group</option>
+              {BLOOD_GROUP_OPTIONS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+            </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <input name="family_contact_name" placeholder="Family Contact Name *" required className={inputClass} />

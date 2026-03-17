@@ -10,6 +10,7 @@ const ALLERGY_OPTIONS = ['None', 'Penicillin', 'Sulfa Drugs', 'Nuts', 'Latex', '
 const MOBILITY_OPTIONS = ['Independent', 'Assisted', 'Bedridden']
 const CONDITION_OPTIONS = ['None', 'Diabetes', 'Heart Disease', 'Asthma', 'Hypertension', 'Other']
 const COMMUNICATION_OPTIONS = ['Clear', 'Hard of Hearing', 'Non-Verbal', 'Dementia-Impaired']
+const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
 export default function EditResidentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -24,6 +25,7 @@ export default function EditResidentPage({ params }: { params: Promise<{ id: str
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
   const [roomNumber, setRoomNumber] = useState('')
+  const [bloodGroup, setBloodGroup] = useState('')
   // familyContactName and familyPhoneNumber will be handled by formData directly in handleSubmit
   // const [familyContactName, setFamilyContactName] = useState('')
   // const [familyPhoneNumber, setFamilyPhoneNumber] = useState('')
@@ -55,6 +57,7 @@ export default function EditResidentPage({ params }: { params: Promise<{ id: str
       setName(data.name || '')
       setAge(data.age?.toString() || '')
       setRoomNumber(data.room_number || '')
+      setBloodGroup(data.blood_group || '')
       // setFamilyContactName(data.family_contact_name || '')
       // setFamilyPhoneNumber(data.family_phone_number || '')
 
@@ -134,6 +137,7 @@ export default function EditResidentPage({ params }: { params: Promise<{ id: str
       name,
       age: parseInt(age),
       room_number: roomNumber || null,
+      blood_group: bloodGroup || null,
       family_contact_name: formData.get('family_contact_name'),
       family_phone_number: formData.get('family_phone_number'),
       
@@ -174,9 +178,13 @@ export default function EditResidentPage({ params }: { params: Promise<{ id: str
         <div className={sectionClass}>
           <h3 className="text-sm font-semibold tracking-tight text-slate-900 border-b border-slate-200 pb-2 mb-4">1. BASIC IDENTITY MATRIX</h3>
           <input name="name" defaultValue={resident?.name} onChange={e => setName(e.target.value)} placeholder="FULL LEGAL NAME *" required className={inputClass} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <input value={age} onChange={e => setAge(e.target.value)} type="number" placeholder="Age *" required min={1} max={150} className={inputClass} />
             <input value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="Room Number" className={inputClass} />
+            <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className={inputClass}>
+              <option value="">Blood Group</option>
+              {BLOOD_GROUP_OPTIONS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+            </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <input name="family_contact_name" defaultValue={resident?.family_contact_name} placeholder="FAMILY CONTACT NAME *" required className={inputClass} />
