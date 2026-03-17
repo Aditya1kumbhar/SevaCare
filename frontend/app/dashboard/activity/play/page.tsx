@@ -339,7 +339,7 @@ export default function PlayModePage() {
         {/* Timer Circle */}
         <div className="relative w-40 h-40 flex items-center justify-center">
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+            <circle cx="60" cy="60" r="54" fill="none" className="stroke-slate-200" strokeWidth="8" />
             <circle
               cx="60" cy="60" r="54" fill="none"
               stroke={isRunning ? '#3b82f6' : '#94a3b8'}
@@ -359,7 +359,7 @@ export default function PlayModePage() {
         </div>
 
         {/* Step-by-Step Guidance — Highlighted Active Step */}
-        <div className="w-full text-left space-y-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div className="w-full text-left space-y-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm" style={{}}>
           <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2"><Translate id="followAlong" fallback="Follow Along" /></p>
           {currentExercise.steps.map((step: any, sIdx: any) => (
             <div
@@ -390,7 +390,7 @@ export default function PlayModePage() {
       </div>
 
       {/* Bottom Controls — Sticky */}
-      <div className="sticky bottom-20 md:bottom-4 z-40 px-6 pt-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent">
+      <div className="sticky bottom-20 md:bottom-4 z-40 px-6 pt-4">
         <div className="flex items-center gap-3">
           {/* Reset */}
           <button
