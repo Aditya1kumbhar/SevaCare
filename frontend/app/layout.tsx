@@ -42,6 +42,7 @@ export const viewport: Viewport = {
 }
 
 import { LanguageProvider } from '@/components/LanguageProvider'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export default function RootLayout({
   children,
@@ -49,12 +50,24 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Anti-flicker: set dark class BEFORE first paint */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            if (localStorage.getItem('sevacare-theme') === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
+          } catch(e) {}
+        `}} />
+      </head>
       <body suppressHydrationWarning className={`${roboto.variable} font-sans antialiased w-full max-w-full overflow-x-hidden`}>
-        <LanguageProvider>
-          {children}
-          <Toaster position="top-center" richColors />
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            {children}
+            <Toaster position="top-center" richColors />
+          </LanguageProvider>
+        </ThemeProvider>
         <Analytics />
         <script
           dangerouslySetInnerHTML={{

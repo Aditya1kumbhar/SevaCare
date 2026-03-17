@@ -94,3 +94,189 @@ input[type="text"], input[type="email"], input[type="tel"], input[type="password
   animation: customFadeIn 0.3s ease-out forwards;
 }
 
+/* ============================================
+   DARK MODE OVERRIDES
+   Remaps hardcoded Tailwind colors when .dark
+   is active on <html>. This ensures ALL pages
+   are readable in dark mode without editing
+   every single component file.
+   ============================================ */
+
+/* --- Base Backgrounds --- */
+.dark body {
+  background-color: #0f172a; /* slate-900 */
+  color: #e2e8f0; /* slate-200 */
+}
+
+/* bg-white → dark surface */
+.dark .bg-white {
+  background-color: #1e293b !important; /* slate-800 */
+}
+.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.9) !important;
+}
+.dark .bg-white\/95 {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+}
+.dark .bg-white\/50 {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* bg-slate-50 → dark surface */
+.dark .bg-slate-50 {
+  background-color: #0f172a !important; /* slate-900 */
+}
+.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+/* Gradient backgrounds */
+.dark .bg-gradient-to-br {
+  background-image: none !important;
+  background-color: #0f172a !important;
+}
+.dark .from-blue-50\/50,
+.dark .via-emerald-50\/20,
+.dark .to-purple-50\/30 {
+  --tw-gradient-from: transparent !important;
+  --tw-gradient-via: transparent !important;
+  --tw-gradient-to: transparent !important;
+}
+
+/* --- Text Colors --- */
+.dark .text-slate-900 {
+  color: #e2e8f0 !important; /* slate-200 */
+}
+.dark .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+.dark .text-slate-700 {
+  color: #cbd5e1 !important; /* slate-300 */
+}
+.dark .text-slate-600 {
+  color: #94a3b8 !important; /* slate-400 */
+}
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+.dark .text-slate-400 {
+  color: #64748b !important; /* slate-500 */
+}
+
+/* --- Borders --- */
+.dark .border-slate-200 {
+  border-color: #334155 !important; /* slate-700 */
+}
+.dark .border-slate-100 {
+  border-color: #1e293b !important; /* slate-800 */
+}
+.dark .border-slate-50 {
+  border-color: #1e293b !important;
+}
+.dark .border-white\/50 {
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* --- Form Inputs --- */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+.dark select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+/* --- Specific Component Overrides --- */
+/* Sidebar */
+.dark aside {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #334155 !important;
+}
+
+/* Bottom nav */
+.dark nav.fixed {
+  background-color: rgba(15, 23, 42, 0.97) !important;
+  border-color: #334155 !important;
+}
+
+/* Cards with colored backgrounds (keep them but darken) */
+.dark .bg-rose-50,
+.dark .bg-emerald-50,
+.dark .bg-blue-50,
+.dark .bg-amber-50,
+.dark .bg-purple-50,
+.dark .bg-indigo-50,
+.dark .bg-sky-50,
+.dark .bg-green-50,
+.dark .bg-red-50,
+.dark .bg-orange-50,
+.dark .bg-yellow-50,
+.dark .bg-teal-50 {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+.dark .bg-rose-100,
+.dark .bg-emerald-100,
+.dark .bg-blue-100,
+.dark .bg-amber-100,
+.dark .bg-yellow-100,
+.dark .bg-orange-100,
+.dark .bg-red-100,
+.dark .bg-green-100 {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-slate-50:hover {
+  background-color: #334155 !important;
+}
+.dark .hover\:bg-white:hover {
+  background-color: #334155 !important;
+}
+.dark .hover\:bg-blue-50:hover {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+.dark .hover\:bg-rose-50:hover {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+
+/* Active states */
+.dark .active\:bg-slate-50:active {
+  background-color: #334155 !important;
+}
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+/* Shadow adjustments */
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Backdrop blur backgrounds */
+.dark .backdrop-blur-md,
+.dark .backdrop-blur-xl,
+.dark .backdrop-blur-sm {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+}
+

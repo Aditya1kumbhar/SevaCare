@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ShieldCheck, Bell, LogOut, ChevronRight, UserCircle, Info, Volume2, Users, ClipboardList, ShieldAlert } from 'lucide-react'
+import { ShieldCheck, Bell, LogOut, ChevronRight, UserCircle, Info, Sun, Moon, Users, ClipboardList, ShieldAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/components/LanguageProvider'
+import { useTheme } from '@/components/ThemeProvider'
 import { requestNotificationPermission, showLocalNotification } from '@/lib/push-notifications'
 import { toast } from 'sonner'
 
@@ -17,6 +18,7 @@ export default function AdminPage() {
   const supabase = createClient()
   const router = useRouter()
   const { language, setLanguage, t } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     async function load() {
@@ -157,22 +159,22 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Test Alarm */}
+        {/* Dark Mode Toggle */}
         <div className="flex items-center justify-between p-4 border-b border-slate-50">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
-              <Volume2 className="w-5 h-5" />
+              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">Test Emergency Alarm</p>
-              <p className="text-xs text-slate-500">Hear the alert sound + test notification</p>
+              <p className="text-sm font-bold text-slate-800">Appearance</p>
+              <p className="text-xs text-slate-500">{theme === 'dark' ? 'Dark mode active' : 'Light mode active'}</p>
             </div>
           </div>
           <button
-            onClick={testAlarm}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors border border-amber-200"
+            onClick={toggleTheme}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-blue-500' : 'bg-slate-300'}`}
           >
-            🔔 Test
+            <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0'}`} />
           </button>
         </div>
 
