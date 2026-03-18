@@ -1,78 +1,184 @@
-# 🪷 SevaCare — Elder Care Management Platform
+<div align="center">
+  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/heart-handshake.svg" alt="SevaCare Logo" width="120" />
+  
+  # 🪷 SevaCare
+  **Next-Generation Elder Care Management Platform**
+  
+  <p>
+    <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js" /></a>
+    <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase" /></a>
+    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" /></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" /></a>
+    <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" alt="React 19" /></a>
+  </p>
+  
+  <p>
+    <em>A modern, offline-first PWA designed to digitize old age home workflows, ensuring uncompromising resident well-being through real-time telemetry, automated reminders, and seamless family communication.</em>
+  </p>
+</div>
 
-SevaCare is a web application designed to simplify and improve the daily management of old age homes. By digitizing workflows and prioritizing resident well-being, it provides caretakers with the tools they need to ensure a high quality of life for the elderly.
+---
 
-## 🎯 How It Solves Real-World Problems
+## 📑 Table of Contents
+- [🎯 The Problem We Solve](#-the-problem-we-solve)
+- [✨ Core Capabilities](#-core-capabilities)
+- [🏗️ System Architecture](#️-system-architecture)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📁 Project Structure](#-project-structure)
+- [🚀 Quick Start (Local Development)](#-quick-start-local-development)
+- [🔒 Security & Compliance](#-security--compliance)
+- [🤝 Contributing](#-contributing)
 
-Managing an old age home often involves overwhelming paperwork, scattered medical records, and the challenge of keeping residents engaged. SevaCare addresses these practical challenges directly:
+---
 
-* **Eliminates Manual Paperwork:** Replaces easily lost physical registers with secure, searchable digital profiles for every resident.
-* **Prevents Missed Medications:** Automated reminders ensure caretakers always know when a resident needs their daily medication.
-* **Combats Inactivity & Isolation:** Provides a dedicated Activity Hub with guided, senior-friendly exercises to promote physical and mental health.
-* **Improves Emergency Response:** Keeps critical medical data (like allergies and mobility risks) instantly accessible in crucial moments.
-* **Keeps Families Connected:** Allows staff to send instant health and mood updates to family members via WhatsApp, building trust and transparency.
+## 🎯 The Problem We Solve
 
-## 📱 Core Features
+Elder care facilities frequently suffer from fragmented data, relying heavily on physical registers. This leads to missed medication schedules, delayed emergency responses, and a lack of transparency for families. 
 
-### 👨‍⚕️ Caretaker Dashboard & Resident Management
-* **Action Center:** A central dashboard that automatically highlights upcoming or overdue medication doses.
-* **Detailed Resident Profiles:** Secure records containing medical history, dietary needs, life-threatening allergies, and wandering risks.
-* **Daily Status Logging:** Quick, mobile-friendly forms for staff to log daily vitals, food intake, and mood.
+**SevaCare** fundamentally transforms this paradigm by providing a unified, tablet-optimized interface for caretakers to log vitals, track prescriptions, monitor engagement, and trigger immediate alerts—all designed with psychological safety and strict security in mind.
 
-### 🧘‍♀️ Wellness & Activity Hub
-*   **Curated Senior Exercises:** Low-impact workouts tailored for the elderly (e.g., Seated Yoga, Deep Breathing).
-*   **Guided Play Mode:** A distraction-free, easy-to-follow interface with a large visible timer that guides residents through exercises step-by-step.
-*   **Progress Tracking:** Records completed activities and builds daily streaks to motivate consistent physical engagement.
+---
 
-## 🏗️ Application Architecture
+## ✨ Core Capabilities
 
-SevaCare is designed to be lightweight and fast. It follows a direct flow from data entry to storage and communication:
+### 🩺 Comprehensive Medical Telemetry
+- **Rich Resident Profiles:** Immutable records of medical history, life-threatening allergies, and granular mobility status.
+- **Dynamic Vitals Logging:** Real-time forms tracking BP, heart rate, blood sugar, and SPO2, with visual indicators for critical deviations.
+- **Prescription Engine:** Automated action center highlighting overdue and upcoming dosages.
+
+### 🌐 Offline-First & Resilient (PWA)
+- Built with **Dexie** (IndexedDB) and Service Workers (`sw.js`).
+- Caretakers can log critically important data even during network outages. The system automatically reconciles with Supabase upon reconnection via the `SyncStatusIndicator`.
+
+### 🌍 Built for Global Accessibility
+- Full **Internationalization (i18n)** support baked natively into the platform (`lib/translations.ts`).
+- Language toggles across the UI ensure staff from different regions can seamlessly interact with the tool.
+
+### 🧘 Gamified Wellness & Activity Hub
+- Carefully curated, low-impact exercise modules specifically engineered for senior citizens.
+- Guided distraction-free mode with progress tracking to foster a sense of accomplishment and combat isolation.
+
+### 🚨 Real-Time Event Driven Alerts
+- Immediate escalation paths for medical, fall, or wandering emergencies.
+- One-click Web-to-WhatsApp routing to bridge the communication gap between facility caretakers and families.
+
+---
+
+## 🏗️ System Architecture
+
+SevaCare leverages a decoupled, serverless architecture optimized for edge delivery and instantaneous state sync.
 
 ```mermaid
 graph TD
-    A[Caretaker / Staff] -->|Manual Entry| B(Next.js App)
-    A -->|Guided Exercises| C(Activity Hub)
-    B -->|Save Records| D[(Supabase Database)]
-    B -->|One-Click Link| E[Family WhatsApp]
-    C -->|Auto-Log Progress| D
-    D -->|Real-time Alerts| B
+    Client["📱 Caretaker Client (PWA)"] 
+    Auth["🔐 Supabase Auth"]
+    DB["🗄️ Supabase PostgreSQL"]
+    NextJS["⚡ Next.js API Routes (Serverless)"]
+    Dexie["💽 Local IndexedDB (Dexie)"]
+
+    Client <-->|Offline Read/Write| Dexie
+    Client -->|JWT Authentication| Auth
+    Client <-->|Real-time Sync / Actions| NextJS
+    NextJS <-->|PostgREST RPC| DB
+    Client <-->|Supabase Realtime| DB
+    Client -->|wa.me deep links| WhatsApp["🟢 Family WhatsApp"]
 ```
 
-*   **User Interface:** A responsive web dashboard that works on tablets and mobiles.
-*   **Data & Auth:** Supabase handles secure logins and stores all resident medical data.
-*   **Communication Layer:** Uses standardized `wa.me` links to bridge the gap between facility records and family communication instantly.
+---
+
+## 🛠️ Tech Stack
+
+### Frontend Ecosystem
+- **Framework:** Next.js 16 (App Router)
+- **UI Architecture:** React 19, Server Components (RSC)
+- **Styling:** Tailwind CSS v4, Radix UI Primitives, `shadcn/ui`
+- **State & Forms:** React Hook Form + Zod validation
+- **Offline Storage:** Dexie.js (IndexedDB wrapper)
+- **Data Viz & Export:** Recharts, jsPDF
+
+### Backend & Infrastructure
+- **BaaS:** Supabase
+- **Database:** PostgreSQL (with Row Level Security)
+- **Deployment:** Vercel / Edge Network
+
+---
 
 ## 📁 Project Structure
 
-A clean, modular structure ensures the app is easy to maintain and scale:
-
 ```text
-NEWIOLDAGEHOME/
-├── db/                       # Database Setup
-│   └── *.sql                 # Database schemas (vitals, meds, activity)
-├── frontend/                 # Core Application
-│   ├── app/                  # Pages & Routing
-│   │   ├── dashboard/        # Main caretaker interface
-│   │   │   ├── activity/     # Exercise & Gamification hub
-│   │   │   ├── residents/    # Resident management (Add/Edit/View)
-│   │   │   └── reminders/    # Medicine Action Center
-│   │   └── api/              # Server-side logic (e.g., Auth, Logging)
-│   ├── components/           # Reusable UI Elements
-│   │   └── ui/               # Base design system (Buttons, Cards, Forms)
-│   └── lib/                  # Helper utilities & Database Clients
-└── README.md                 # Project Overview
+sevacare/
+├── db/                         # Raw SQL migrations (001 to 007)
+├── frontend/
+│   ├── app/                    # Next.js App Router root
+│   │   ├── api/                # Serverless handlers (auth, logging)
+│   │   ├── dashboard/          # Protected caretaker interfaces
+│   │   │   ├── activity/       # Wellness & Gamification engine
+│   │   │   ├── residents/      # CRUD for patient census
+│   │   │   └── reminders/      # Medication & Task queue
+│   │   └── offline/            # PWA fallback states
+│   ├── components/             # Dumb & Smart UI components
+│   │   └── ui/                 # Radix/Tailwind design system
+│   ├── lib/                    # Core business logic & clients
+│   │   ├── supabase/           # Server/Client auth wrappers
+│   │   ├── translations.ts     # i18n dictionaries
+│   │   └── offline-db.ts       # Dexie local state management
+│   └── public/                 # Static assets & Manifests
+└── DEPLOYMENT_GUIDE.md         # Infrastructure setup protocols
 ```
 
-## 🛠️ How It Works (Technology)
-SevaCare is built with a simple, modern architecture optimized for ease of use by non-technical care staff. It features a calming, accessible design that works seamlessly on both mobile phones (for on-the-go nurses) and desktop computers (for administrators). 
+---
 
-*   **Frontend:** Next.js and Tailwind CSS (delivering a fast, mobile-friendly experience)
-*   **Backend & Database:** Supabase (ensuring secure and reliable data storage)
+## 🚀 Quick Start (Local Development)
 
-## 🚀 Quick Start & Deployment
+### Prerequisites
+- Node.js (v18.x or higher)
+- npm or pnpm
+- A Supabase Project
 
-For step-by-step instructions on setting up SevaCare on your own systems (using Vercel and Supabase), please refer to the **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** included in this repository.
+### 1. Database Setup
+Execute the SQL files located in the `db/` directory strictly in numerical order within your Supabase SQL Editor to establish the required schemas and Row Level Security (RLS) policies.
 
-1. Set up your Supabase project and run the database setup queries found in the `db/` folder.
-2. Add your database credentials to a `frontend/.env.local` file.
-3. Run `npm install` followed by `npm run dev` in the `frontend/` directory to start the application locally.
+### 2. Environment Variables
+Clone the `.env.example` file to create your localized secrets configuration:
+
+```bash
+cd frontend
+cp .env.example .env.local
+```
+Populate the file with your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+```
+
+### 3. Install & Run
+```bash
+npm install
+npm run dev
+```
+The application will be hot-reloading at `http://localhost:3000`.
+
+---
+
+## 🔒 Security & Compliance
+
+- **Authentication:** Managed entirely via Supabase Auth (Secure JWTs).
+- **Data Governance:** Strict PostgreSQL Row Level Security (RLS) policies ensure multi-tenant data isolation; authenticated sessions can only access authorized facility parameters.
+- **Edge Validation:** Zod schemas guarantee type safety boundaries between the client and serverless functions.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the open-source community to build better tooling for elder care. 
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'feat: Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+<div align="center">
+  <p>Engineered with care 💙 to improve lives.</p>
+</div>
