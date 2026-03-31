@@ -58,7 +58,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(DYNAMIC_CACHE).then((cache) => cache.put(event.request, responseToCache));
           return networkResponse;
         }).catch(() => {
-           // Do nothing if asset fails to load offline
+           return new Response('Offline asset', { status: 503, statusText: 'Service Unavailable' });
         });
       })
     );
@@ -109,6 +109,7 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch((err) => {
           console.error("Fetch failed for", event.request.url, err);
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
       });
 
       return cachedResponse || fetchPromise;
