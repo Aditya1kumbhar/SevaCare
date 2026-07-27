@@ -9,22 +9,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    // Default to Marathi if not specified
     const languageCode = lang || 'mr';
 
-    // Get base64 encoded audio strings for the text
-    // This automatically handles chunking for long texts (> 200 chars)
-    const results = await googleTTS.getAllAudioBase64(text, {
+    // Strip markdown formatting, extra asterisks, and emojis for clean TTS
+    const cleanText = text
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[*_#`~]/g, '')
+      .trim();
+
+    // Generate direct audio URLs (client=tw-ob)
+    // Handled natively by browser <audio> without server-side 403 blocks
+    const results = googleTTS.getAllAudioUrls(cleanText, {
       lang: languageCode,
       slow: false,
       host: 'https://translate.google.com',
       splitPunc: '।.,?!',
     });
 
-    // Return the array of base64 chunks
     return NextResponse.json({
       success: true,
-      audioChunks: results.map(r => r.base64)
+      audioUrls: results.map(r => r.url)
     });
   } catch (error: any) {
     console.error('Error generating TTS:', error);
