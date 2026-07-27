@@ -1,0 +1,123 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Users, LayoutDashboard, LogOut, ShieldAlert, Bell, Mic, Video } from 'lucide-react'
+import NavRemindersBadge from './NavRemindersBadge'
+import SyncStatusIndicator from './SyncStatusIndicator'
+import EmergencyListener from '@/components/EmergencyListener'
+import { Translate } from '@/components/Translate'
+import { translations } from '@/lib/translations'
+
+type TranslationKey = keyof typeof translations['en']
+
+const NAV_ITEMS: { name: string; tKey: TranslationKey; href: string; icon: any; mobile: boolean }[] = [
+  { name: 'Dashboard', tKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard, mobile: true },
+  { name: 'Residents', tKey: 'residents', href: '/dashboard/residents', icon: Users, mobile: true },
+  { name: 'Voice Assistant', tKey: 'voiceAssistant', href: '/dashboard/voice-assistant', icon: Mic, mobile: true },
+  { name: 'Telemedicine', tKey: 'telemedicine', href: '/dashboard/telemedicine', icon: Video, mobile: true },
+  { name: 'Reminders', tKey: 'reminders', href: '/dashboard/batch-log', icon: Bell, mobile: true },
+]
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  async function handleSignOut() {
+    'use server'
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+    redirect('/')
+  }
+
+  if (!user) redirect('/')
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 bg-gradient-to-br from-blue-50/50 via-emerald-50/20 to-purple-50/30">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-slate-200 flex-col shrink-0 z-10">
+        <div className="p-5 border-b border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 shadow-sm bg-white flex items-center justify-center">
+            <Image src="/logo.png" alt="SevaCare Logo" width={40} height={40} className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">SevaCare</h1>
+            <p className="text-xs font-medium text-slate-500 mt-0.5 truncate mb-2">{user.email}</p>
+            <SyncStatusIndicator />
+          </div>
+        </div>
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={true}
+              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-300 ease-out active:scale-[0.98]"
+            >
+              <div className="relative flex items-center justify-center p-1 transition-transform duration-300 ease-out group-hover:scale-110">
+                <item.icon className="w-5 h-5" />
+                {item.name === 'Reminders' && <NavRemindersBadge />}
+              </div>
+              <Translate id={item.tKey} fallback={item.name} />
+            </Link>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-slate-100">
+          <form action="/api/auth/signout" method="POST">
+            <button
+              type="submit"
+              className="w-full px-4 py-3 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left flex items-center gap-3"
+            >
+              <LogOut className="w-5 h-5" /> <Translate id="logOut" fallback="Log Out" />
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 p-4 pb-28 md:p-6 md:pb-6 h-screen overflow-auto">
+        {/* Mobile Header (Optional but good for context) */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white/50 shadow-sm">
+           <div className="flex items-center gap-3">
+             <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-slate-100 shadow-sm bg-white flex items-center justify-center">
+               <Image src="/logo.png" alt="SevaCare Logo" width={36} height={36} className="w-full h-full object-cover" />
+             </div>
+             <div>
+               <h1 className="text-lg font-bold tracking-tight text-slate-900">SevaCare</h1>
+               <p className="text-[10px] font-medium text-slate-500 truncate max-w-[150px]">{user.email}</p>
+             </div>
+           </div>
+           
+           <div className="flex items-center gap-2 z-20">
+             <SyncStatusIndicator />
+           </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto">{children}</div>
+        <EmergencyListener />
+      </main>
+
+      {/* Mobile Bottom Navigation (WhatsApp / Instagram style) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200 z-50 flex items-center justify-around pb-safe">
+        {NAV_ITEMS.filter(item => item.mobile).map((item) => (
+          <Link
+             key={item.href}
+             href={item.href}
+             prefetch={true}
+             className="flex flex-col items-center justify-center gap-1 w-full py-3 text-slate-500 hover:text-blue-600 active:bg-slate-50 transition-all duration-300 ease-out active:scale-95"
+          >
+             <div className="relative flex items-center justify-center pt-2 transition-transform duration-300 ease-out">
+               <item.icon className="w-6 h-6 mb-0.5" />
+               {item.name === 'Reminders' && <NavRemindersBadge />}
+             </div>
+             <span className="text-[10px] font-bold tracking-wide"><Translate id={item.tKey} fallback={item.name} /></span>
+          </Link>
+        ))}
+      </nav>
+    </div>
+  )
+}

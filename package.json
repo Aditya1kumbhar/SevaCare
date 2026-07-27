@@ -1,0 +1,13 @@
+{
+  "name": "sevacare",
+  "version": "1.0.0",
+  "description": "SevaCare Elder Care Management System",
+  "private": true,
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npx prisma generate && npm run build",
+    "start": "cd frontend && npm run start",
+    "postinstall": "cd frontend && npx prisma generate",
+    "lint": "cd frontend && npm run lint"
+  }
+}

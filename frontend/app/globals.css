@@ -1,0 +1,501 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #e4e4e7;
+  --secondary-foreground: #000000;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #000000;
+  --input: #e4e4e7;
+  --ring: #000000;
+  --radius: 0rem;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #27272a;
+  --secondary-foreground: #ffffff;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #ffffff;
+}
+
+:root {
+  --font-sans: 'Roboto', system-ui, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  font-size-adjust: 100%;
+}
+
+* {
+  border-color: var(--border);
+  outline-color: rgba(255, 255, 255, 0.5);
+}
+
+html, button, a, input[type="submit"], input[type="button"], input[type="reset"] {
+  touch-action: manipulation;
+}
+
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea, select {
+  font-size: 16px;
+}
+
+@keyframes customFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-fade-in {
+  animation: customFadeIn 0.3s ease-out forwards;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   Remaps hardcoded Tailwind colors when .dark
+   is active on <html>. This ensures ALL pages
+   are readable in dark mode without editing
+   every single component file.
+   ============================================ */
+
+/* --- Base Backgrounds --- */
+.dark body {
+  background-color: #0f172a; /* slate-900 */
+  color: #e2e8f0; /* slate-200 */
+}
+
+/* bg-white → dark surface */
+.dark .bg-white {
+  background-color: #1e293b !important; /* slate-800 */
+}
+.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.9) !important;
+}
+.dark .bg-white\/95 {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+}
+.dark .bg-white\/50 {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* bg-slate-50 → dark surface */
+.dark .bg-slate-50 {
+  background-color: #0f172a !important; /* slate-900 */
+}
+.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+/* Gradient backgrounds */
+.dark .bg-gradient-to-br {
+  background-image: none !important;
+  background-color: #0f172a !important;
+}
+.dark .from-blue-50\/50,
+.dark .via-emerald-50\/20,
+.dark .to-purple-50\/30 {
+  --tw-gradient-from: transparent !important;
+  --tw-gradient-via: transparent !important;
+  --tw-gradient-to: transparent !important;
+}
+
+/* --- Text Colors --- */
+.dark .text-slate-900 {
+  color: #e2e8f0 !important; /* slate-200 */
+}
+.dark .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+.dark .text-slate-700 {
+  color: #cbd5e1 !important; /* slate-300 */
+}
+.dark .text-slate-600 {
+  color: #94a3b8 !important; /* slate-400 */
+}
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+.dark .text-slate-400 {
+  color: #64748b !important; /* slate-500 */
+}
+
+/* --- Borders --- */
+.dark .border-slate-200 {
+  border-color: #334155 !important; /* slate-700 */
+}
+.dark .border-slate-100 {
+  border-color: #1e293b !important; /* slate-800 */
+}
+.dark .border-slate-50 {
+  border-color: #1e293b !important;
+}
+.dark .border-white\/50 {
+  border-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* --- Form Inputs --- */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+.dark select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+/* --- Specific Component Overrides --- */
+/* Sidebar */
+.dark aside {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #334155 !important;
+}
+
+/* Bottom nav */
+.dark nav.fixed {
+  background-color: rgba(15, 23, 42, 0.97) !important;
+  border-color: #334155 !important;
+}
+
+/* Cards with colored backgrounds (keep them but darken) */
+.dark .bg-rose-50,
+.dark .bg-emerald-50,
+.dark .bg-blue-50,
+.dark .bg-amber-50,
+.dark .bg-purple-50,
+.dark .bg-indigo-50,
+.dark .bg-sky-50,
+.dark .bg-green-50,
+.dark .bg-red-50,
+.dark .bg-orange-50,
+.dark .bg-yellow-50,
+.dark .bg-teal-50 {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+.dark .bg-rose-100,
+.dark .bg-emerald-100,
+.dark .bg-blue-100,
+.dark .bg-amber-100,
+.dark .bg-yellow-100,
+.dark .bg-orange-100,
+.dark .bg-red-100,
+.dark .bg-green-100 {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-slate-50:hover {
+  background-color: #334155 !important;
+}
+.dark .hover\:bg-white:hover {
+  background-color: #334155 !important;
+}
+.dark .hover\:bg-blue-50:hover {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+.dark .hover\:bg-rose-50:hover {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+
+/* Active states */
+.dark .active\:bg-slate-50:active {
+  background-color: #334155 !important;
+}
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+/* Shadow adjustments */
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Backdrop blur backgrounds */
+.dark .backdrop-blur-md,
+.dark .backdrop-blur-xl,
+.dark .backdrop-blur-sm {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+}
+
+/* SVG strokes */
+.dark .stroke-slate-200 {
+  stroke: #334155 !important;
+}
+
+/* Scale transforms on active items — keep dark bg */
+.dark .bg-blue-50.scale-\[1\.02\],
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+.dark .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Caution banner */
+.dark .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+}
+.dark .border-rose-200 {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Step number circles */
+.dark .bg-slate-100 {
+  background-color: #334155 !important;
+}
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+/* ============================================
+   HIGH-CONTRAST MODE
+   Elderly-friendly theme with maximum readability,
+   oversized touch targets, and reduced motion.
+   Activated via .high-contrast class on <html>.
+   ============================================ */
+
+/* --- Base --- */
+.high-contrast body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-size: 18px !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* --- Typography: everything bigger and bolder --- */
+.high-contrast h1, .high-contrast h2, .high-contrast h3 {
+  font-weight: 900 !important;
+  letter-spacing: 0.01em !important;
+}
+.high-contrast h1 { font-size: 2rem !important; }
+.high-contrast h2 { font-size: 1.75rem !important; }
+.high-contrast h3 { font-size: 1.5rem !important; }
+
+.high-contrast p,
+.high-contrast span,
+.high-contrast label,
+.high-contrast td,
+.high-contrast th,
+.high-contrast li,
+.high-contrast div {
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
+}
+
+.high-contrast .text-xs,
+.high-contrast .text-sm {
+  font-size: 1rem !important;
+}
+
+/* --- Colors: pure black-on-white, maximum contrast --- */
+.high-contrast .bg-white,
+.high-contrast .bg-slate-50,
+.high-contrast .bg-slate-100,
+.high-contrast .bg-gray-50,
+.high-contrast .bg-gray-100 {
+  background-color: #ffffff !important;
+}
+
+.high-contrast .text-slate-900,
+.high-contrast .text-slate-800,
+.high-contrast .text-slate-700,
+.high-contrast .text-slate-600,
+.high-contrast .text-slate-500,
+.high-contrast .text-slate-400,
+.high-contrast .text-gray-900,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-500 {
+  color: #000000 !important;
+}
+
+.high-contrast .text-muted-foreground {
+  color: #1a1a1a !important;
+}
+
+/* --- Borders: thick and visible --- */
+.high-contrast .border,
+.high-contrast .border-slate-200,
+.high-contrast .border-slate-100,
+.high-contrast .border-gray-200 {
+  border-color: #000000 !important;
+  border-width: 2px !important;
+}
+
+/* --- Buttons & Interactive: oversized touch targets --- */
+.high-contrast button,
+.high-contrast a,
+.high-contrast [role="button"],
+.high-contrast input[type="submit"],
+.high-contrast input[type="button"] {
+  min-height: 48px !important;
+  min-width: 48px !important;
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+  border: 2px solid #000000 !important;
+  border-radius: 8px !important;
+}
+
+.high-contrast button:hover,
+.high-contrast a:hover,
+.high-contrast [role="button"]:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.high-contrast button:focus-visible,
+.high-contrast a:focus-visible,
+.high-contrast input:focus-visible,
+.high-contrast textarea:focus-visible,
+.high-contrast select:focus-visible {
+  outline: 4px solid #0000ff !important;
+  outline-offset: 2px !important;
+}
+
+/* --- Form Inputs --- */
+.high-contrast input,
+.high-contrast select,
+.high-contrast textarea {
+  background-color: #ffffff !important;
+  border: 3px solid #000000 !important;
+  color: #000000 !important;
+  font-size: 1.125rem !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+}
+
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #333333 !important;
+  font-weight: 600 !important;
+}
+
+/* --- Cards --- */
+.high-contrast .rounded-lg,
+.high-contrast .rounded-xl,
+.high-contrast .rounded-2xl {
+  border: 3px solid #000000 !important;
+  border-radius: 8px !important;
+}
+
+/* --- Colored backgrounds become high-contrast versions --- */
+.high-contrast .bg-rose-50,
+.high-contrast .bg-red-50 {
+  background-color: #ffe0e0 !important;
+  border-left: 6px solid #cc0000 !important;
+}
+.high-contrast .bg-emerald-50,
+.high-contrast .bg-green-50 {
+  background-color: #d4edda !important;
+  border-left: 6px solid #006600 !important;
+}
+.high-contrast .bg-blue-50 {
+  background-color: #cce5ff !important;
+  border-left: 6px solid #0000cc !important;
+}
+.high-contrast .bg-amber-50,
+.high-contrast .bg-yellow-50,
+.high-contrast .bg-orange-50 {
+  background-color: #fff3cd !important;
+  border-left: 6px solid #cc6600 !important;
+}
+
+/* --- Reduced motion for accessibility --- */
+.high-contrast *,
+.high-contrast *::before,
+.high-contrast *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* --- Scrollbar: visible and wide --- */
+.high-contrast ::-webkit-scrollbar {
+  width: 12px;
+}
+.high-contrast ::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border: 1px solid #000000;
+}
+.high-contrast ::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 6px;
+}
+
+/* --- Status badges: bold colors --- */
+.high-contrast .bg-rose-600 { background-color: #cc0000 !important; }
+.high-contrast .bg-emerald-600 { background-color: #006600 !important; }
+.high-contrast .bg-blue-600 { background-color: #0000cc !important; }
+.high-contrast .bg-amber-600 { background-color: #cc6600 !important; }
+
+/* --- Nav / Sidebar --- */
+.high-contrast aside {
+  border-right: 3px solid #000000 !important;
+}
+.high-contrast nav.fixed {
+  border-top: 3px solid #000000 !important;
+}
+
