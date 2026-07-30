@@ -4,7 +4,7 @@ import React from 'react'
 import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '@/components/ThemeProvider'
 
-export default function ThemeToggleButton({ showLabel = false }: { showLabel?: boolean }) {
+export default function ThemeToggleButton({ showLabel = true }: { showLabel?: boolean }) {
   const { theme, setTheme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -18,15 +18,18 @@ export default function ThemeToggleButton({ showLabel = false }: { showLabel?: b
       type="button"
       aria-label="Toggle Dark or Light Mode"
       title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-      className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm active:scale-95 cursor-pointer"
+      className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-md transition-all active:scale-95 cursor-pointer z-50 shrink-0"
     >
       {isDark ? (
-        <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+        <>
+          <Sun className="w-4 h-4 text-amber-400 shrink-0 animate-spin-slow" />
+          {showLabel && <span>Light Mode</span>}
+        </>
       ) : (
-        <Moon className="w-4 h-4 text-indigo-600 shrink-0" />
-      )}
-      {showLabel && (
-        <span>{isDark ? 'Light' : 'Dark'}</span>
+        <>
+          <Moon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+          {showLabel && <span>Dark Mode</span>}
+        </>
       )}
     </button>
   )
