@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as googleTTS from 'google-tts-api';
+import Groq from 'groq-sdk';
 
 // Helper function to attach 44-byte RIFF WAV header to 24kHz 16-bit Mono PCM buffer
 function pcmToWavBase64(pcmBase64: string, sampleRate = 24000, numChannels = 1, bitsPerSample = 16): string {
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     const shortText = cleanText.length > 220 ? cleanText.substring(0, 220) + '...' : cleanText;
 
     // ════════════════════════════════════════════════════
-    // LAYER 1: Google Gemini 2.5 Flash Native Multimodal Audio Voice Engine
+    // LAYER 1: Google Gemini 2.5 Flash Native Multimodal Audio Voice Engine (Studio Quality)
     // ════════════════════════════════════════════════════
     const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
               speechConfig: {
                 voiceConfig: {
                   prebuiltVoiceConfig: {
-                    voiceName: "Aoede" // Studio prebuilt voice: "Aoede", "Kore", "Puck", "Charon", "Fenrir"
+                    voiceName: "Aoede" // Studio prebuilt voices: "Aoede", "Kore", "Puck", "Charon", "Fenrir"
                   }
                 }
               }
@@ -84,12 +85,39 @@ export async function POST(request: Request) {
           }
         }
       } catch (e: any) {
-        console.log('[TTS] Gemini Native Audio failed, falling back to Google TTS API:', e.message);
+        console.log('[TTS] Gemini Native Audio failed, trying next layer:', e.message);
       }
     }
 
     // ════════════════════════════════════════════════════
-    // LAYER 2: Google TTS Base64 Fallback
+    // LAYER 2: Groq Audio Speech SDK (canopylabs/orpheus-v1-english)
+    // ════════════════════════════════════════════════════
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey) {
+      try {
+        const groq = new Groq({ apiKey: groqKey });
+        const audioResponse = await groq.audio.speech.create({
+          model: 'canopylabs/orpheus-v1-english',
+          voice: 'troy',
+          input: shortText,
+          response_format: 'wav'
+        });
+        const arrayBuffer = await audioResponse.arrayBuffer();
+        const base64Wav = Buffer.from(arrayBuffer).toString('base64');
+        const dataUri = `data:audio/wav;base64,${base64Wav}`;
+        console.log('[TTS] Groq Orpheus Speech API OK');
+        return NextResponse.json({
+          success: true,
+          provider: 'groq-orpheus-speech',
+          audioUrl: dataUri
+        });
+      } catch (e: any) {
+        console.log('[TTS] Groq Orpheus Speech failed, trying Google TTS fallback:', e.message);
+      }
+    }
+
+    // ════════════════════════════════════════════════════
+    // LAYER 3: Google TTS Base64 Fallback
     // ════════════════════════════════════════════════════
     const base64Audio = await googleTTS.getAudioBase64(shortText, {
       lang: languageCode,
