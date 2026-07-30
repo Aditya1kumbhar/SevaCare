@@ -193,6 +193,7 @@ export default function VoiceAssistantPage() {
     let reply = '';
     let type = 'general';
 
+    let spokenText = '';
     try {
       const resObj = residents.find(r => r.id === selectedResident);
       const res = await fetch('/api/ai-voice', {
@@ -202,6 +203,7 @@ export default function VoiceAssistantPage() {
       });
       const data = await res.json();
       if (data?.audio_response) {
+        spokenText = data.audio_response;
         reply = data.audio_response;
         if (data.detailed_analysis && data.detailed_analysis.trim()) {
           reply += `\n\n📋 Clinical Guidance:\n${data.detailed_analysis}`;
@@ -219,13 +221,14 @@ export default function VoiceAssistantPage() {
         : lang === 'Marathi'
         ? (type === 'emergency' ? 'कृपया ताबडतोब खाली बसा! मी आपत्कालीन पथकाला कळवले आहे.' : type === 'symptom' ? 'कृपया विश्रांती घ्या, मी नोंद घेतली आहे.' : 'तुमची नोंद घेतली आहे.')
         : (type === 'emergency' ? 'Please sit down immediately and stay calm! I have alerted the emergency team.' : type === 'symptom' ? 'Please rest, I have recorded your symptom for the doctor.' : 'Your message has been logged. A caretaker will assist you.');
+      spokenText = reply;
     }
 
     // Add AI bubble
     setMessages(prev => [...prev, { id: 'a' + Date.now(), role: 'ai', text: reply, type, timestamp: new Date() }]);
 
-    // Speak it out loud
-    speak(reply, lang);
+    // Speak ONLY the audio_response out loud!
+    speak(spokenText || reply, lang);
 
     // Save to DB
     if (type === 'emergency') {

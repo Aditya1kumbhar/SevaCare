@@ -21,24 +21,24 @@ CORE BEHAVIOR PROTOCOL:
 
 LANGUAGE & SCRIPT RULES:
 - You MUST respond in ${language || 'English'} language ONLY.
-- If language is Marathi: respond ENTIRELY in natural, warm, grammatically perfect Marathi using DEVANAGARI SCRIPT (मराठी).
-- If language is Hindi: respond ENTIRELY in respectful, warm Hindi using DEVANAGARI SCRIPT (हिंदी).
-- If language is English: respond in clear, compassionate, articulate English.
-- NEVER use transliteration or Roman script for Hindi/Marathi. ALWAYS use Devanagari (देवनागरी).
+- If language is Marathi: \`audio_response\` MUST be 100% in pure Marathi using DEVANAGARI SCRIPT (मराठी).
+- If language is Hindi: \`audio_response\` MUST be 100% in pure Hindi using DEVANAGARI SCRIPT (हिंदी).
+- If language is English: \`audio_response\` MUST be in clear, compassionate English.
+- NEVER mix English words or Roman script into \`audio_response\` when language is Marathi or Hindi.
+- Keep \`audio_response\` to 2 concise, reassuring spoken sentences (under 180 characters) so text-to-speech audio plays instantly.
 - Address the resident warmly by name: "${residentName || 'Resident'}".
-- Make \`audio_response\` sound completely human, deeply caring, intelligent, soothing, and natural (3-4 spoken sentences).
-- Make \`detailed_analysis\` provide full AGI-level clinical reasoning, immediate first-aid steps, red flags, and caretaker guidance.
+- Put any detailed clinical reasoning, first-aid SOPs, and caretaker notes into \`detailed_analysis\`.
 
 WORKSPACE KNOWLEDGE BASE & CLINICAL SOPS:
 ${kbContext}`;
 
     const userMessage = `Resident "${residentName || 'Resident'}" said: "${transcript}"
 
-Analyze this deeply with full AGI medical intelligence against the Knowledge Base and generate JSON:
-{"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high"|"critical","keywords":["extracted symptoms/topics in English"],"audio_response":"deeply compassionate, intelligent, natural human spoken response in ${language || 'English'} using Devanagari if Hindi/Marathi","detailed_analysis":"rich, expert AGI medical analysis and step-by-step guidance in ${language || 'English'}","summary":"1-line English medical summary for caretaker log"}`;
+Analyze this against the Knowledge Base and generate JSON:
+{"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high"|"critical","keywords":["extracted symptoms/topics in English"],"audio_response":"reassuring 2-sentence spoken response in 100% ${language || 'English'} (Devanagari if Hindi/Marathi, NO English words)","detailed_analysis":"rich, expert AGI medical analysis and step-by-step guidance in ${language || 'English'}","summary":"1-line English medical summary for caretaker log"}`;
 
     // ════════════════════════════════════════════════════
-    // LAYER 1: Groq SDK (openai/gpt-oss-120b) — PRIMARY AGI ENGINE
+    // LAYER 1: Groq SDK (llama-3.3-70b for Marathi/Hindi, gpt-oss-120b for English)
     // ════════════════════════════════════════════════════
     const groqKey = process.env.GROQ_API_KEY;
 
@@ -47,27 +47,36 @@ Analyze this deeply with full AGI medical intelligence against the Knowledge Bas
         const groq = new Groq({ apiKey: groqKey });
         let chatCompletion;
 
+        // llama-3.3-70b-versatile delivers unmatched native Marathi & Hindi fluency
+        const primaryModel = (language === 'Marathi' || language === 'Hindi') 
+          ? 'llama-3.3-70b-versatile' 
+          : 'openai/gpt-oss-120b';
+
+        const secondaryModel = primaryModel === 'openai/gpt-oss-120b' 
+          ? 'llama-3.3-70b-versatile' 
+          : 'openai/gpt-oss-120b';
+
         try {
           chatCompletion = await groq.chat.completions.create({
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage }
             ],
-            model: 'openai/gpt-oss-120b',
-            temperature: 0.7,
+            model: primaryModel,
+            temperature: 0.65,
             max_tokens: 1000,
             response_format: { type: 'json_object' }
           });
         } catch (e) {
-          console.log('[AI] gpt-oss-120b failed via SDK, falling back to llama-3.3-70b-versatile');
+          console.log(`[AI] ${primaryModel} failed via SDK, falling back to ${secondaryModel}`);
           chatCompletion = await groq.chat.completions.create({
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage }
             ],
-            model: 'llama-3.3-70b-versatile',
+            model: secondaryModel,
             temperature: 0.65,
-            max_tokens: 500,
+            max_tokens: 1000,
             response_format: { type: 'json_object' }
           });
         }
