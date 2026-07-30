@@ -312,19 +312,19 @@ export default function TelemedicinePage() {
           </Card>
 
           {/* Sleek High-Contrast Controls Bar */}
-          <div className="flex flex-wrap justify-center items-center gap-4 bg-slate-900 dark:bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-xl">
+          <div 
+            style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+            className="flex flex-wrap justify-center items-center gap-4 p-4 rounded-2xl border border-slate-800 shadow-2xl"
+          >
             <button
               type="button"
               onClick={toggleAudio}
               disabled={status === 'Disconnected'}
               title={isAudioMuted ? "Unmute Microphone" : "Mute Microphone"}
-              className={`rounded-full w-12 h-12 flex items-center justify-center transition-all ${
-                isAudioMuted 
-                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/40' 
-                  : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed'
-              }`}
+              style={{ backgroundColor: isAudioMuted ? '#e11d48' : '#1e293b', color: '#ffffff' }}
+              className="rounded-full w-12 h-12 flex items-center justify-center transition-all border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
             >
-              {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {isAudioMuted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
             </button>
 
             <button
@@ -332,13 +332,10 @@ export default function TelemedicinePage() {
               onClick={toggleVideo}
               disabled={status === 'Disconnected'}
               title={isVideoMuted ? "Turn On Camera" : "Turn Off Camera"}
-              className={`rounded-full w-12 h-12 flex items-center justify-center transition-all ${
-                isVideoMuted 
-                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/40' 
-                  : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed'
-              }`}
+              style={{ backgroundColor: isVideoMuted ? '#e11d48' : '#1e293b', color: '#ffffff' }}
+              className="rounded-full w-12 h-12 flex items-center justify-center transition-all border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
             >
-              {isVideoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+              {isVideoMuted ? <VideoOff className="w-5 h-5 text-white" /> : <Video className="w-5 h-5 text-white" />}
             </button>
 
             <button
@@ -346,26 +343,29 @@ export default function TelemedicinePage() {
               onClick={switchCamera}
               disabled={status !== 'Disconnected'}
               title="Switch Camera (Mobile)"
-              className="rounded-full w-12 h-12 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              style={{ backgroundColor: '#1e293b', color: '#ffffff' }}
+              className="rounded-full w-12 h-12 flex items-center justify-center border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md"
             >
-              <Smartphone className="w-5 h-5" />
+              <Smartphone className="w-5 h-5 text-white" />
             </button>
 
             {status === 'Disconnected' ? (
               <button
                 type="button"
                 onClick={initWebRTC}
-                className="rounded-full h-12 px-7 bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition-all active:scale-95 cursor-pointer"
+                style={{ backgroundColor: '#059669', color: '#ffffff' }}
+                className="rounded-full h-12 px-7 font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/50 transition-all active:scale-95 cursor-pointer text-white text-sm"
               >
-                <Phone className="h-4 w-4 fill-current" /> Start Call
+                <Phone className="h-4 w-4 fill-current text-white" /> Start Call
               </button>
             ) : (
               <button
                 type="button"
                 onClick={endCall}
-                className="rounded-full h-12 px-7 bg-rose-600 hover:bg-rose-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-rose-900/40 transition-all active:scale-95 cursor-pointer"
+                style={{ backgroundColor: '#e11d48', color: '#ffffff' }}
+                className="rounded-full h-12 px-7 font-bold flex items-center gap-2 shadow-lg shadow-rose-900/50 transition-all active:scale-95 cursor-pointer text-white text-sm"
               >
-                <PhoneOff className="h-4 w-4 fill-current" /> End Call
+                <PhoneOff className="h-4 w-4 fill-current text-white" /> End Call
               </button>
             )}
           </div>
