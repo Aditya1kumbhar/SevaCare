@@ -27,27 +27,22 @@ export default async function DashboardLayout({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  async function handleSignOut() {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/')
-  }
-
   if (!user) redirect('/')
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 bg-gradient-to-br from-blue-50/50 via-emerald-50/20 to-purple-50/30">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-white/80 backdrop-blur-md border-r border-slate-200 flex-col shrink-0 z-10">
-        <div className="p-5 border-b border-slate-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 shadow-sm bg-white flex items-center justify-center">
-            <Image src="/logo.png" alt="SevaCare Logo" width={40} height={40} className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">SevaCare</h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5 truncate mb-2">{user.email}</p>
-            <SyncStatusIndicator />
+      <aside className="hidden md:flex w-64 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md border-r border-slate-200 dark:border-slate-800 flex-col shrink-0 z-10">
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm bg-white flex items-center justify-center">
+              <Image src="/logo.png" alt="SevaCare Logo" width={40} height={40} className="w-full h-full object-cover" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">SevaCare</h1>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mb-1">{user.email}</p>
+              <SyncStatusIndicator />
+            </div>
           </div>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
@@ -56,7 +51,7 @@ export default async function DashboardLayout({
               key={item.href}
               href={item.href}
               prefetch={true}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-300 ease-out active:scale-[0.98]"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-400 rounded-xl transition-all duration-300 ease-out active:scale-[0.98]"
             >
               <div className="relative flex items-center justify-center p-1 transition-transform duration-300 ease-out group-hover:scale-110">
                 <item.icon className="w-5 h-5" />
@@ -66,11 +61,15 @@ export default async function DashboardLayout({
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Theme</span>
+            <ThemeToggleButton showLabel />
+          </div>
           <form action="/api/auth/signout" method="POST">
             <button
               type="submit"
-              className="w-full px-4 py-3 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left flex items-center gap-3"
+              className="w-full px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-all text-left flex items-center gap-3"
             >
               <LogOut className="w-5 h-5" /> <Translate id="logOut" fallback="Log Out" />
             </button>
@@ -80,19 +79,20 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <main className="flex-1 p-4 pb-28 md:p-6 md:pb-6 h-screen overflow-auto">
-        {/* Mobile Header (Optional but good for context) */}
-        <div className="md:hidden flex items-center justify-between mb-6 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white/50 shadow-sm">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
            <div className="flex items-center gap-3">
              <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-slate-100 shadow-sm bg-white flex items-center justify-center">
                <Image src="/logo.png" alt="SevaCare Logo" width={36} height={36} className="w-full h-full object-cover" />
              </div>
              <div>
-               <h1 className="text-lg font-bold tracking-tight text-slate-900">SevaCare</h1>
-               <p className="text-[10px] font-medium text-slate-500 truncate max-w-[150px]">{user.email}</p>
+               <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">SevaCare</h1>
+               <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[120px]">{user.email}</p>
              </div>
            </div>
            
            <div className="flex items-center gap-2 z-20">
+             <ThemeToggleButton />
              <SyncStatusIndicator />
            </div>
         </div>
