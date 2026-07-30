@@ -11,27 +11,33 @@ export async function POST(request: Request) {
 
     const languageCode = lang || 'mr';
 
-    // Strip markdown formatting, extra asterisks, and emojis for clean TTS
+    // Clean text: strip markdown, extra spaces, emojis, and special chars
     const cleanText = text
       .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
       .replace(/[*_#`~]/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
-    // Generate direct audio URLs (client=tw-ob)
-    // Handled natively by browser <audio> without server-side 403 blocks
-    const results = googleTTS.getAllAudioUrls(cleanText, {
+    // Limit chunk to first 180 chars for ultra-fast, robust TTS generation
+    const shortText = cleanText.length > 180 ? cleanText.substring(0, 180) + '...' : cleanText;
+
+    // Generate base64 audio data URI directly
+    const base64Audio = await googleTTS.getAudioBase64(shortText, {
       lang: languageCode,
       slow: false,
       host: 'https://translate.google.com',
-      splitPunc: '।.,?!',
+      timeout: 10000,
     });
+
+    const dataUri = `data:audio/mp3;base64,${base64Audio}`;
 
     return NextResponse.json({
       success: true,
-      audioUrls: results.map(r => r.url)
+      audioUrl: dataUri,
+      audioChunks: [base64Audio]
     });
   } catch (error: any) {
     console.error('Error generating TTS:', error);
-    return NextResponse.json({ error: 'Failed to generate speech' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate speech', details: error.message }, { status: 500 });
   }
 }

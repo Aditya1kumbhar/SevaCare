@@ -89,22 +89,15 @@ export default function VoiceAssistantPage() {
         if (!response.ok) throw new Error('API failed');
         
         const data = await response.json();
-        const urls = data.audioUrls || (data.audioChunks ? data.audioChunks.map((c: string) => `data:audio/mp3;base64,${c}`) : []);
+        const audioSrc = data.audioUrl || (data.audioUrls ? data.audioUrls[0] : null) || (data.audioChunks ? `data:audio/mp3;base64,${data.audioChunks[0]}` : null);
 
-        if (urls && urls.length > 0) {
-          let i = 0;
-          const playNextChunk = () => {
-            if (i >= urls.length) return;
-            const audio = new Audio(urls[i]);
-            audio.volume = 1.0;
-            audio.onended = () => { i++; playNextChunk(); };
-            audio.onerror = () => { i++; playNextChunk(); };
-            audio.play().catch(e => {
-              console.log('Audio playback blocked by browser, falling back', e);
-              playBrowserTTS(txt, code);
-            });
-          };
-          playNextChunk();
+        if (audioSrc) {
+          const audio = new Audio(audioSrc);
+          audio.volume = 1.0;
+          await audio.play().catch(e => {
+            console.log('Audio playback blocked by browser, falling back', e);
+            playBrowserTTS(txt, code);
+          });
         } else {
           playBrowserTTS(txt, code);
         }
