@@ -201,7 +201,13 @@ export default function VoiceAssistantPage() {
         body: JSON.stringify({ transcript: text, language: lang, residentName: resObj?.name || 'Resident' })
       });
       const data = await res.json();
-      if (data?.audio_response) { reply = data.audio_response; type = data.type || 'general'; }
+      if (data?.audio_response) {
+        reply = data.audio_response;
+        if (data.detailed_analysis && data.detailed_analysis.trim()) {
+          reply += `\n\n📋 Clinical Guidance:\n${data.detailed_analysis}`;
+        }
+        type = data.type || 'general';
+      }
     } catch {}
 
     // Fallback if no reply
