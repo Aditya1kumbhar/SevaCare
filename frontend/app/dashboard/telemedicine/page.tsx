@@ -240,9 +240,11 @@ export default function TelemedicinePage() {
   const handleBandwidthChange = async (checked: boolean) => {
     const newMode = checked ? 'LOW' : 'NORMAL'
     setBandwidthMode(newMode)
-    if (peerConnectionRef.current) {
-      await applyBandwidthConstraints(peerConnectionRef.current, newMode)
-      toast.success(`Bandwidth mode set to ${checked ? 'Low' : 'Normal'}`)
+    await applyBandwidthConstraints(peerConnectionRef.current, localStreamRef.current, newMode)
+    if (checked) {
+      toast.success('⚡ Low Bandwidth Mode Active (100kbps, 320x240 @ 15fps)')
+    } else {
+      toast.info('📶 Normal Bandwidth Mode Active (500kbps, 640x480 @ 30fps)')
     }
   }
 
@@ -255,21 +257,26 @@ export default function TelemedicinePage() {
 
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Telemedicine Consultation</h1>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Status:</span>
-          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-            status === 'Connected' ? 'bg-green-100 text-green-800' :
-            status === 'Connecting' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
+          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+            status === 'Connected' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+            status === 'Connecting' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+            'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
           }`}>
             {status}
           </span>
+          {bandwidthMode === 'LOW' && (
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-white shadow-xs">
+              ⚡ Low Bandwidth (100kbps)
+            </span>
+          )}
           {status === 'Connected' && (
-            <div className={`flex items-center gap-1 ml-4 ${qualityColor[quality]}`}>
+            <div className={`flex items-center gap-1 ml-3 ${qualityColor[quality]}`}>
               {quality === 'Poor' || quality === 'Unknown' ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
-              <span className="text-xs font-semibold">{quality} Quality</span>
+              <span className="text-xs font-bold">{quality} Quality</span>
             </div>
           )}
         </div>
@@ -278,7 +285,7 @@ export default function TelemedicinePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Video Area */}
         <div className="lg:col-span-2 space-y-4">
-          <Card className="bg-slate-950 overflow-hidden relative border-0 aspect-video rounded-xl flex items-center justify-center">
+          <Card className="bg-slate-950 overflow-hidden relative border-0 aspect-video rounded-2xl flex items-center justify-center shadow-xl">
             <video
               ref={remoteVideoRef}
               autoPlay
@@ -286,14 +293,14 @@ export default function TelemedicinePage() {
               className="w-full h-full object-cover"
             />
             {status !== 'Connected' && (
-              <div className="absolute inset-0 flex items-center justify-center text-slate-500">
-                <VideoOff className="w-16 h-16 opacity-50 mb-2" />
-                <p className="ml-4">{status === 'Connecting' ? 'Waiting for peer...' : 'Not in a call'}</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                <VideoOff className="w-16 h-16 opacity-50 mb-3" />
+                <p className="font-semibold text-sm">{status === 'Connecting' ? 'Connecting... Waiting for peer to join room' : 'Not in a call. Enter room code and click Start Call.'}</p>
               </div>
             )}
             
             {/* Local Video PIP */}
-            <div className="absolute bottom-4 right-4 w-1/4 max-w-[200px] aspect-video bg-black rounded-lg border-2 border-white/20 overflow-hidden shadow-xl">
+            <div className="absolute bottom-4 right-4 w-1/4 max-w-[200px] aspect-video bg-slate-900 rounded-xl border-2 border-slate-700 overflow-hidden shadow-2xl z-10">
               <video
                 ref={localVideoRef}
                 autoPlay
@@ -304,52 +311,62 @@ export default function TelemedicinePage() {
             </div>
           </Card>
 
-          {/* Controls */}
-          <div className="flex flex-wrap justify-center gap-4 bg-slate-100 p-4 rounded-xl">
-            <Button
-              variant={isAudioMuted ? "destructive" : "secondary"}
-              size="icon"
-              className="rounded-full w-12 h-12"
+          {/* Sleek High-Contrast Controls Bar */}
+          <div className="flex flex-wrap justify-center items-center gap-4 bg-slate-900 dark:bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-xl">
+            <button
+              type="button"
               onClick={toggleAudio}
               disabled={status === 'Disconnected'}
+              title={isAudioMuted ? "Unmute Microphone" : "Mute Microphone"}
+              className={`rounded-full w-12 h-12 flex items-center justify-center transition-all ${
+                isAudioMuted 
+                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/40' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed'
+              }`}
             >
-              {isAudioMuted ? <MicOff /> : <Mic />}
-            </Button>
-            <Button
-              variant={isVideoMuted ? "destructive" : "secondary"}
-              size="icon"
-              className="rounded-full w-12 h-12"
+              {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+
+            <button
+              type="button"
               onClick={toggleVideo}
               disabled={status === 'Disconnected'}
+              title={isVideoMuted ? "Turn On Camera" : "Turn Off Camera"}
+              className={`rounded-full w-12 h-12 flex items-center justify-center transition-all ${
+                isVideoMuted 
+                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/40' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed'
+              }`}
             >
-              {isVideoMuted ? <VideoOff /> : <Video />}
-            </Button>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="rounded-full w-12 h-12"
+              {isVideoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+            </button>
+
+            <button
+              type="button"
               onClick={switchCamera}
               disabled={status !== 'Disconnected'}
               title="Switch Camera (Mobile)"
+              className="rounded-full w-12 h-12 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              <Smartphone />
-            </Button>
+              <Smartphone className="w-5 h-5" />
+            </button>
+
             {status === 'Disconnected' ? (
-              <Button
-                variant="default"
-                className="rounded-full h-12 px-6 bg-green-600 hover:bg-green-700"
+              <button
+                type="button"
                 onClick={initWebRTC}
+                className="rounded-full h-12 px-7 bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition-all active:scale-95 cursor-pointer"
               >
-                <Phone className="mr-2 h-4 w-4" /> Start Call
-              </Button>
+                <Phone className="h-4 w-4 fill-current" /> Start Call
+              </button>
             ) : (
-              <Button
-                variant="destructive"
-                className="rounded-full h-12 px-6"
+              <button
+                type="button"
                 onClick={endCall}
+                className="rounded-full h-12 px-7 bg-rose-600 hover:bg-rose-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-rose-900/40 transition-all active:scale-95 cursor-pointer"
               >
-                <PhoneOff className="mr-2 h-4 w-4" /> End Call
-              </Button>
+                <PhoneOff className="h-4 w-4 fill-current" /> End Call
+              </button>
             )}
           </div>
         </div>
