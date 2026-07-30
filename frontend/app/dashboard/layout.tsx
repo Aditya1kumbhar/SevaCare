@@ -8,6 +8,7 @@ import SyncStatusIndicator from './SyncStatusIndicator'
 import EmergencyListener from '@/components/EmergencyListener'
 import { Translate } from '@/components/Translate'
 import { translations } from '@/lib/translations'
+import ThemeToggleButton from '@/components/ThemeToggleButton'
 
 type TranslationKey = keyof typeof translations['en']
 
