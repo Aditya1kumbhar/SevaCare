@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { KNOWLEDGE_BASE } from '@/lib/knowledge-base';
+import Groq from 'groq-sdk';
 
-// ─── Groq (Llama 3.3 70B AGI) → Gemini → Smart Fallback ───
+// ─── Groq (openai/gpt-oss-120b AGI via SDK) → Gemini → Smart Fallback ───
 export async function POST(request: Request) {
   try {
     const { transcript, language, residentName } = await request.json();
@@ -36,66 +37,48 @@ Analyze this deeply against the Knowledge Base and generate an AGI-quality JSON 
 {"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high"|"critical","keywords":["extracted symptoms/topics in English"],"audio_response":"deeply compassionate, intelligent, natural response in ${language || 'English'} using Devanagari if Hindi/Marathi","summary":"1-line English medical summary for caretaker log"}`;
 
     // ════════════════════════════════════════════════════
-    // LAYER 1: Groq (Llama 3.3 70B) — PRIMARY (ultra-fast ~0.1s AGI)
+    // LAYER 1: Groq SDK (openai/gpt-oss-120b) — PRIMARY
     // ════════════════════════════════════════════════════
     const groqKey = process.env.GROQ_API_KEY;
 
     if (groqKey) {
       try {
-        let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${groqKey}`,
-          },
-          body: JSON.stringify({
-            model: 'openai/gpt-oss-120b',
+        const groq = new Groq({ apiKey: groqKey });
+        let chatCompletion;
+
+        try {
+          chatCompletion = await groq.chat.completions.create({
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage }
             ],
+            model: 'openai/gpt-oss-120b',
             temperature: 0.65,
             max_tokens: 500,
             response_format: { type: 'json_object' }
-          })
-        });
-
-        // Fallback to llama-3.3-70b-versatile if gpt-oss-120b fails
-        if (!response.ok) {
-          console.log('[AI] gpt-oss-120b failed, trying llama-3.3-70b-versatile...');
-          response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${groqKey}`,
-            },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage }
-              ],
-              temperature: 0.65,
-              max_tokens: 500,
-              response_format: { type: 'json_object' }
-            })
+          });
+        } catch (e) {
+          console.log('[AI] gpt-oss-120b failed via SDK, falling back to llama-3.3-70b-versatile');
+          chatCompletion = await groq.chat.completions.create({
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userMessage }
+            ],
+            model: 'llama-3.3-70b-versatile',
+            temperature: 0.65,
+            max_tokens: 500,
+            response_format: { type: 'json_object' }
           });
         }
 
-        if (response.ok) {
-          const result = await response.json();
-          const rawText = result.choices?.[0]?.message?.content || '';
-          const parsed = extractJSON(rawText);
-          if (parsed) {
-            console.log('[AI] Groq/Llama response OK');
-            return NextResponse.json({ success: true, provider: 'groq-llama', ...parsed });
-          }
-        } else {
-          const errText = await response.text().catch(() => '');
-          console.log(`[AI] Groq returned ${response.status}: ${errText.substring(0, 200)}`);
+        const rawText = chatCompletion.choices?.[0]?.message?.content || '';
+        const parsed = extractJSON(rawText);
+        if (parsed) {
+          console.log('[AI] Groq SDK response OK');
+          return NextResponse.json({ success: true, provider: 'groq-sdk', ...parsed });
         }
       } catch (e: any) {
-        console.log('[AI] Groq error:', e.message);
+        console.log('[AI] Groq SDK error:', e.message);
       }
     }
 
