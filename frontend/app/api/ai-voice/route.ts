@@ -42,14 +42,14 @@ Analyze this deeply against the Knowledge Base and generate an AGI-quality JSON 
 
     if (groqKey) {
       try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${groqKey}`,
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage }
@@ -59,6 +59,28 @@ Analyze this deeply against the Knowledge Base and generate an AGI-quality JSON 
             response_format: { type: 'json_object' }
           })
         });
+
+        // Fallback to llama-3.3-70b-versatile if gpt-oss-120b fails
+        if (!response.ok) {
+          console.log('[AI] gpt-oss-120b failed, trying llama-3.3-70b-versatile...');
+          response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${groqKey}`,
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userMessage }
+              ],
+              temperature: 0.65,
+              max_tokens: 500,
+              response_format: { type: 'json_object' }
+            })
+          });
+        }
 
         if (response.ok) {
           const result = await response.json();
