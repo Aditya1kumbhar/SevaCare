@@ -1,5 +1,5 @@
-const CACHE_NAME = 'sevacare-offline-v12';
-const DYNAMIC_CACHE = 'sevacare-dynamic-v12';
+const CACHE_NAME = 'sevacare-offline-v13';
+const DYNAMIC_CACHE = 'sevacare-dynamic-v13';
 
 // Full list of application routes to pre-cache for 95%+ offline capability
 const ASSETS_TO_CACHE = [
@@ -11,7 +11,6 @@ const ASSETS_TO_CACHE = [
   '/reminders',
   '/emergency',
   '/settings',
-  '/dashboard/privacy',
   '/offline',
   '/manifest.json',
   '/icon.svg',
@@ -74,29 +73,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Navigation Requests (HTML pages) - Cache First with Network Revalidate (Stale-While-Revalidate)
+  // 2. Navigation Requests (HTML pages) - Network First with Cache Fallback (Ensures fresh builds online, fallback offline)
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(DYNAMIC_CACHE).then((cache) => {
-                cache.put(event.request, networkResponse.clone());
-              });
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            // Network failed: return cached page or fallback to /offline
-            return caches.match('/offline').then(offlineRes => {
-              return offlineRes || caches.match('/');
-            });
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/offline') || caches.match('/');
           });
-
-        // Serve cached version immediately if available for 0ms load time!
-        return cachedResponse || fetchPromise;
-      })
+        })
     );
     return;
   }
