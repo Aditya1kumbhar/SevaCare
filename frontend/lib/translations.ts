@@ -9,7 +9,7 @@ export const translations = {
     voiceAssistant: "Voice Assistant",
     telemedicine: "Telemedicine",
     reminders: "Reminders",
-    systemConfig: "System Config",
+    systemConfig: "Settings",
     logOut: "Log Out",
     
     // Admin / Settings Page
@@ -249,7 +249,7 @@ export const translations = {
     voiceAssistant: "वॉइस असिस्टेंट",
     telemedicine: "टेलीमेडिसिन",
     reminders: "अनुस्मारक",
-    systemConfig: "सिस्टम कॉन्फ़िगरेशन",
+    systemConfig: "सेटिंग्स",
     logOut: "लॉग आउट",
     
     // Admin / Settings Page
@@ -489,7 +489,7 @@ export const translations = {
     voiceAssistant: "व्हॉइस असिस्टंट",
     telemedicine: "टेलिमेडिसिन",
     reminders: "स्मरणपत्रे",
-    systemConfig: "सिस्टम कॉन्फिगरेशन",
+    systemConfig: "सेटिंग्ज",
     logOut: "लॉग आउट",
     
     // Admin / Settings Page
