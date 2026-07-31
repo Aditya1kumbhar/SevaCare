@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, AlertTriangle, Activity, Languages, Bot, User, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { analyzeTranscript, getLanguageCode } from '@/lib/voice-commands';
 import anime from 'animejs';
 
 interface Resident { id: string; name: string; }

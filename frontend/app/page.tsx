@@ -61,11 +61,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 transition-colors relative">
-      {/* Top Floating Theme Toggle Button */}
-      <div className="absolute top-4 right-4 z-50">
-        <ThemeToggleButton showLabel />
-      </div>
-
       {/* Main Card */}
       <div ref={cardRef} className="w-full max-w-[350px] bg-white border border-slate-200 rounded-2xl p-10 shadow-sm opacity-0">
         {/* Logo */}
