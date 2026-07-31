@@ -21,6 +21,9 @@ export default function LoginPage() {
   const { t } = useLanguage()
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('error=login_required')) {
+      toast.error('Authentication required. Please log in to access SevaCare.')
+    }
     if (cardRef.current) {
       anime({
         targets: cardRef.current,
