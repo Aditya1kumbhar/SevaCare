@@ -72,18 +72,17 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-2">
-              <form action="/api/auth/signout" method="POST">
-                <Button
-                  type="submit"
-                  variant="destructive"
-                  onClick={(e) => {
-                    anime({ targets: e.currentTarget, scale: [0.94, 1.03, 1], duration: 300, easing: 'spring(1, 80, 12, 0)' })
-                  }}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl font-bold py-2.5 shadow-md cursor-pointer select-none"
-                >
-                  <LogOut className="w-4 h-4" /> {t.logOut || 'Log Out'}
-                </Button>
-              </form>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={async (e) => {
+                  anime({ targets: e.currentTarget, scale: [0.94, 1.03, 1], duration: 300, easing: 'spring(1, 80, 12, 0)' })
+                  await handleSignOut()
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl font-bold py-3 shadow-md cursor-pointer select-none text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition-all"
+              >
+                <LogOut className="w-4 h-4 text-white" /> {t.logOut || 'Log Out'}
+              </Button>
             </div>
           </CardContent>
         </Card>
