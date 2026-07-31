@@ -1,5 +1,3 @@
-'use client'
-
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import { translations } from './translations'
@@ -14,10 +12,10 @@ if (!i18n.isInitialized) {
         hi: { translation: translations.hi },
         mr: { translation: translations.mr },
       },
-      lng: typeof window !== 'undefined' ? (localStorage.getItem('sevacare-lang') || 'mr') : 'mr', // Default to Marathi
+      lng: 'mr', // Default to Marathi on SSR, synchronized on mount by LanguageProvider
       fallbackLng: 'en',
       interpolation: {
-        escapeValue: false, // React already safes from xss
+        escapeValue: false, // React already protects from XSS
       },
     })
 }

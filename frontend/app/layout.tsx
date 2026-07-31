@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Roboto } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
+import { LanguageProvider } from '@/components/LanguageProvider'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
 const roboto = Roboto({ subsets: ['latin'], variable: '--font-roboto', weight: ['300', '400', '500', '700'] })
@@ -40,9 +42,6 @@ export const viewport: Viewport = {
   maximumScale: 5,
   viewportFit: 'cover',
 }
-
-import { LanguageProvider } from '@/components/LanguageProvider'
-import { ThemeProvider } from '@/components/ThemeProvider'
 
 export default function RootLayout({
   children,
