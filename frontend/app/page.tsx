@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useLanguage } from '@/components/LanguageProvider'
+import anime from 'animejs'
 
 import ThemeToggleButton from '@/components/ThemeToggleButton'
 
@@ -14,9 +15,32 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const supabase = createClient()
   const { t } = useLanguage()
+
+  useEffect(() => {
+    if (cardRef.current) {
+      anime({
+        targets: cardRef.current,
+        opacity: [0, 1],
+        translateY: [30, 0],
+        scale: [0.95, 1],
+        duration: 700,
+        easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+      })
+
+      anime({
+        targets: cardRef.current.querySelectorAll('input, button, p, h1, img'),
+        opacity: [0, 1],
+        translateY: [15, 0],
+        delay: anime.stagger(60, { start: 150 }),
+        duration: 500,
+        easing: 'easeOutCubic',
+      })
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -43,7 +67,7 @@ export default function LoginPage() {
       </div>
 
       {/* Main Card */}
-      <div className="w-full max-w-[350px] bg-white border border-slate-200 rounded-2xl p-10 shadow-sm">
+      <div ref={cardRef} className="w-full max-w-[350px] bg-white border border-slate-200 rounded-2xl p-10 shadow-sm opacity-0">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-slate-100 shadow-md mb-5 bg-white flex items-center justify-center">

@@ -2,13 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Users, LayoutDashboard, LogOut, ShieldAlert, Bell, Mic, Video } from 'lucide-react'
+import { Users, LayoutDashboard, LogOut, ShieldAlert, Bell, Mic, Video, Settings } from 'lucide-react'
 import NavRemindersBadge from './NavRemindersBadge'
 import SyncStatusIndicator from './SyncStatusIndicator'
 import EmergencyListener from '@/components/EmergencyListener'
 import { Translate } from '@/components/Translate'
 import { translations } from '@/lib/translations'
 import ThemeToggleButton from '@/components/ThemeToggleButton'
+
+import AnimatedNavLink from '@/components/AnimatedNavLink'
 
 type TranslationKey = keyof typeof translations['en']
 
@@ -18,6 +20,7 @@ const NAV_ITEMS: { name: string; tKey: TranslationKey; href: string; icon: any; 
   { name: 'Voice Assistant', tKey: 'voiceAssistant', href: '/dashboard/voice-assistant', icon: Mic, mobile: true },
   { name: 'Telemedicine', tKey: 'telemedicine', href: '/dashboard/telemedicine', icon: Video, mobile: true },
   { name: 'Reminders', tKey: 'reminders', href: '/dashboard/batch-log', icon: Bell, mobile: true },
+  { name: 'Settings', tKey: 'systemConfig', href: '/dashboard/settings', icon: Settings, mobile: true },
 ]
 
 export default async function DashboardLayout({
@@ -48,18 +51,17 @@ export default async function DashboardLayout({
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           {NAV_ITEMS.map((item) => (
-            <Link
+            <AnimatedNavLink
               key={item.href}
               href={item.href}
-              prefetch={true}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-400 rounded-xl transition-all duration-300 ease-out active:scale-[0.98]"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-400 rounded-xl"
             >
-              <div className="relative flex items-center justify-center p-1 transition-transform duration-300 ease-out group-hover:scale-110">
+              <div className="relative flex items-center justify-center p-1">
                 <item.icon className="w-5 h-5" />
                 {item.name === 'Reminders' && <NavRemindersBadge />}
               </div>
               <Translate id={item.tKey} fallback={item.name} />
-            </Link>
+            </AnimatedNavLink>
           ))}
         </nav>
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
@@ -105,18 +107,18 @@ export default async function DashboardLayout({
       {/* Mobile Bottom Navigation (WhatsApp / Instagram style) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200 z-50 flex items-center justify-around pb-safe">
         {NAV_ITEMS.filter(item => item.mobile).map((item) => (
-          <Link
+          <AnimatedNavLink
              key={item.href}
              href={item.href}
-             prefetch={true}
-             className="flex flex-col items-center justify-center gap-1 w-full py-3 text-slate-500 hover:text-blue-600 active:bg-slate-50 transition-all duration-300 ease-out active:scale-95"
+             isMobile={true}
+             className="flex flex-col items-center justify-center gap-1 w-full py-3 text-slate-500 hover:text-blue-600"
           >
-             <div className="relative flex items-center justify-center pt-2 transition-transform duration-300 ease-out">
+             <div className="relative flex items-center justify-center pt-2">
                <item.icon className="w-6 h-6 mb-0.5" />
                {item.name === 'Reminders' && <NavRemindersBadge />}
              </div>
              <span className="text-[10px] font-bold tracking-wide"><Translate id={item.tKey} fallback={item.name} /></span>
-          </Link>
+          </AnimatedNavLink>
         ))}
       </nav>
     </div>

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+import AnimePulse from '@/components/AnimePulse'
+
 export default function NavRemindersBadge() {
   const [hasAlerts, setHasAlerts] = useState(false)
   const supabase = createClient()
@@ -42,6 +44,6 @@ export default function NavRemindersBadge() {
   if (!hasAlerts) return null
 
   return (
-    <span className="absolute -top-1 -right-1 md:static md:ml-auto md:mt-0 w-3 h-3 bg-rose-600 rounded-full shadow-sm animate-pulse border-2 border-white"></span>
+    <AnimePulse className="absolute -top-1 -right-1 md:static md:ml-auto md:mt-0 w-3 h-3 bg-rose-600 rounded-full shadow-sm border-2 border-white" />
   )
 }

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Volume2, AlertTriangle, Activity, Languages, Bot, User, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import { analyzeTranscript, getLanguageCode } from '@/lib/voice-commands';
+import anime from 'animejs';
 
 interface Resident { id: string; name: string; }
 interface Message { id: string; role: 'user' | 'ai'; text: string; type?: string; timestamp: Date; }
@@ -34,6 +34,22 @@ export default function VoiceAssistantPage() {
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
   }, []);
+
+  useEffect(() => {
+    if (!isListening) return;
+    const rippleAnimation = anime({
+      targets: ['.anime-ripple-1', '.anime-ripple-2', '.anime-ripple-3'],
+      scale: [1, 2.2],
+      opacity: [0.8, 0],
+      delay: anime.stagger(300),
+      duration: 1600,
+      loop: true,
+      easing: 'easeOutCubic',
+    });
+    return () => {
+      rippleAnimation.pause();
+    };
+  }, [isListening]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -351,25 +367,38 @@ export default function VoiceAssistantPage() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Mic Button */}
-          <div className="border-t p-5 flex items-center justify-center gap-5 bg-muted/20">
-            <Button
-              onClick={isListening ? stopMic : startMic}
-              disabled={isProcessing}
-              className={`rounded-full w-20 h-20 shadow-xl transition-all duration-200 ${
-                isListening ? 'bg-red-600 hover:bg-red-700 ring-[6px] ring-red-200 scale-110' :
-                isProcessing ? 'bg-gray-400 cursor-not-allowed' :
-                'bg-blue-600 hover:bg-blue-700 hover:scale-105'
-              }`}
-            >
-              {isListening ? <Mic className="w-9 h-9 text-white" /> : <MicOff className="w-9 h-9 text-white" />}
-            </Button>
-            <div className="text-center min-w-[140px]">
-              <p className="text-sm font-semibold">
-                {isListening ? '🎙️ Speak now...' : isProcessing ? '🤖 Getting response...' : 'Tap mic to speak'}
+          {/* Mic Button with Anime.js Audio Wave / Ripple Effect */}
+          <div className="border-t p-6 flex flex-col sm:flex-row items-center justify-center gap-6 bg-muted/20 relative overflow-hidden">
+            <div className="relative flex items-center justify-center">
+              {/* Anime.js Ripple Rings when listening */}
+              {isListening && (
+                <>
+                  <div className="anime-ripple-1 absolute w-20 h-20 rounded-full border-2 border-red-500/60 pointer-events-none" />
+                  <div className="anime-ripple-2 absolute w-20 h-20 rounded-full border-2 border-red-400/40 pointer-events-none" />
+                  <div className="anime-ripple-3 absolute w-20 h-20 rounded-full border-2 border-rose-500/20 pointer-events-none" />
+                </>
+              )}
+              
+              <Button
+                id="mic-main-btn"
+                onClick={isListening ? stopMic : startMic}
+                disabled={isProcessing}
+                className={`relative z-10 rounded-full w-24 h-24 shadow-2xl transition-all duration-300 ${
+                  isListening ? 'bg-red-600 hover:bg-red-700 shadow-red-500/50' :
+                  isProcessing ? 'bg-slate-500 cursor-not-allowed shadow-none' :
+                  'bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/30'
+                }`}
+              >
+                {isListening ? <Mic className="w-10 h-10 text-white animate-pulse" /> : <MicOff className="w-10 h-10 text-white" />}
+              </Button>
+            </div>
+
+            <div className="text-center sm:text-left min-w-[160px]">
+              <p className="text-base font-bold text-slate-900 dark:text-slate-100">
+                {isListening ? '🎙️ Listening...' : isProcessing ? '🤖 Processing Voice...' : 'Tap Mic to Speak'}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isListening ? 'I\'ll auto-stop when you pause' : isProcessing ? 'AI is thinking' : 'Press → Speak → Release'}
+              <p className="text-xs text-muted-foreground mt-1 font-medium">
+                {isListening ? 'Speak naturally in English, Hindi, or Marathi' : isProcessing ? 'AI is analyzing your request' : 'Hands-free regional voice assistant'}
               </p>
             </div>
           </div>

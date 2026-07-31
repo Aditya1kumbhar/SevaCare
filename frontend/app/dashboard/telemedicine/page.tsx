@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import anime from 'animejs'
 
 type ConnectionStatus = 'Disconnected' | 'Connecting' | 'Connected'
 type QualityIndicator = 'Poor' | 'Fair' | 'Good' | 'Unknown'
@@ -318,33 +319,42 @@ export default function TelemedicinePage() {
           >
             <button
               type="button"
-              onClick={toggleAudio}
+              onClick={(e) => {
+                anime({ targets: e.currentTarget, scale: [0.85, 1.1, 1], duration: 400, easing: 'spring(1, 80, 12, 0)' })
+                toggleAudio()
+              }}
               disabled={status === 'Disconnected'}
               title={isAudioMuted ? "Unmute Microphone" : "Mute Microphone"}
               style={{ backgroundColor: isAudioMuted ? '#e11d48' : '#1e293b', color: '#ffffff' }}
-              className="rounded-full w-12 h-12 flex items-center justify-center transition-all border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
+              className="rounded-full w-12 h-12 flex items-center justify-center transition-colors border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md cursor-pointer select-none"
             >
               {isAudioMuted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
             </button>
 
             <button
               type="button"
-              onClick={toggleVideo}
+              onClick={(e) => {
+                anime({ targets: e.currentTarget, scale: [0.85, 1.1, 1], duration: 400, easing: 'spring(1, 80, 12, 0)' })
+                toggleVideo()
+              }}
               disabled={status === 'Disconnected'}
               title={isVideoMuted ? "Turn On Camera" : "Turn Off Camera"}
               style={{ backgroundColor: isVideoMuted ? '#e11d48' : '#1e293b', color: '#ffffff' }}
-              className="rounded-full w-12 h-12 flex items-center justify-center transition-all border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
+              className="rounded-full w-12 h-12 flex items-center justify-center transition-colors border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md cursor-pointer select-none"
             >
               {isVideoMuted ? <VideoOff className="w-5 h-5 text-white" /> : <Video className="w-5 h-5 text-white" />}
             </button>
 
             <button
               type="button"
-              onClick={switchCamera}
+              onClick={(e) => {
+                anime({ targets: e.currentTarget, scale: [0.85, 1.1, 1], duration: 400, easing: 'spring(1, 80, 12, 0)' })
+                switchCamera()
+              }}
               disabled={status !== 'Disconnected'}
               title="Switch Camera (Mobile)"
               style={{ backgroundColor: '#1e293b', color: '#ffffff' }}
-              className="rounded-full w-12 h-12 flex items-center justify-center border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md"
+              className="rounded-full w-12 h-12 flex items-center justify-center border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md cursor-pointer select-none"
             >
               <Smartphone className="w-5 h-5 text-white" />
             </button>
@@ -352,18 +362,24 @@ export default function TelemedicinePage() {
             {status === 'Disconnected' ? (
               <button
                 type="button"
-                onClick={initWebRTC}
+                onClick={(e) => {
+                  anime({ targets: e.currentTarget, scale: [0.9, 1.05, 1], duration: 450, easing: 'spring(1, 80, 12, 0)' })
+                  initWebRTC()
+                }}
                 style={{ backgroundColor: '#059669', color: '#ffffff' }}
-                className="rounded-full h-12 px-7 font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/50 transition-all active:scale-95 cursor-pointer text-white text-sm"
+                className="rounded-full h-12 px-7 font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/50 cursor-pointer text-white text-sm select-none"
               >
                 <Phone className="h-4 w-4 fill-current text-white" /> Start Call
               </button>
             ) : (
               <button
                 type="button"
-                onClick={endCall}
+                onClick={(e) => {
+                  anime({ targets: e.currentTarget, scale: [0.9, 1.05, 1], duration: 450, easing: 'spring(1, 80, 12, 0)' })
+                  endCall()
+                }}
                 style={{ backgroundColor: '#e11d48', color: '#ffffff' }}
-                className="rounded-full h-12 px-7 font-bold flex items-center gap-2 shadow-lg shadow-rose-900/50 transition-all active:scale-95 cursor-pointer text-white text-sm"
+                className="rounded-full h-12 px-7 font-bold flex items-center gap-2 shadow-lg shadow-rose-900/50 cursor-pointer text-white text-sm select-none"
               >
                 <PhoneOff className="h-4 w-4 fill-current text-white" /> End Call
               </button>

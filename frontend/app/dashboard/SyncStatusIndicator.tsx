@@ -7,6 +7,8 @@ import { CloudOff, RefreshCw, CheckCircle2, WifiOff } from 'lucide-react'
 import { useLanguage } from '@/components/LanguageProvider'
 import { toast } from 'sonner'
 
+import AnimePulse from '@/components/AnimePulse'
+
 export default function SyncStatusIndicator() {
   const { t } = useLanguage()
   const [isOnline, setIsOnline] = useState(true)
@@ -67,10 +69,10 @@ export default function SyncStatusIndicator() {
 
   if (isSyncing) {
     return (
-      <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 rounded-full text-[11px] font-bold animate-pulse border border-blue-200 dark:border-blue-800">
+      <AnimePulse className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 rounded-full text-[11px] font-bold border border-blue-200 dark:border-blue-800">
         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
         <span>Syncing Cloud...</span>
-      </div>
+      </AnimePulse>
     )
   }
 
