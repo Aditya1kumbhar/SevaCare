@@ -53,19 +53,17 @@
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
 
-html {
-  scroll-behavior: smooth;
-  overflow-x: hidden;
-  overscroll-behavior-y: none;
-}
-
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
+  /* Force native scroll inertia off to prevent frictional jiggle */
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: auto; 
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
   background-color: var(--background);
   color: var(--foreground);
   font-size-adjust: 100%;

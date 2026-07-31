@@ -1,5 +1,5 @@
-const CACHE_NAME = 'sevacare-offline-v9';
-const DYNAMIC_CACHE = 'sevacare-dynamic-v9';
+const CACHE_NAME = 'sevacare-offline-v8';
+const DYNAMIC_CACHE = 'sevacare-dynamic-v8';
 
 // Full list of application routes to pre-cache for 95%+ offline capability
 const ASSETS_TO_CACHE = [
