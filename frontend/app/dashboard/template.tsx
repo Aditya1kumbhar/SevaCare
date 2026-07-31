@@ -35,7 +35,7 @@ export default function DashboardTemplate({ children }: { children: React.ReactN
   }, [])
 
   return (
-    <div ref={containerRef} style={{ overscrollBehavior: 'none', position: 'relative', width: '100%' }} className="w-full opacity-0">
+    <div ref={containerRef} className="w-full opacity-0">
       {children}
     </div>
   )
