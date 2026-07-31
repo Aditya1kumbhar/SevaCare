@@ -1,6 +1,18 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/residents',
+  '/voice-assistant',
+  '/telemedicine',
+  '/reminders',
+  '/settings',
+  '/emergency',
+  '/log',
+  '/batch-log'
+]
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -32,8 +44,10 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // 1. Mandatory Login Guard: If user is NOT logged in and trying to access /dashboard (or any sub-route)
-  if (!user && pathname.startsWith('/dashboard')) {
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
+
+  // 1. Mandatory Login Guard: If user is NOT logged in and trying to access any protected route
+  if (!user && isProtectedRoute) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/'
     redirectUrl.searchParams.set('error', 'login_required')
@@ -53,6 +67,13 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/residents/:path*',
+    '/voice-assistant/:path*',
+    '/telemedicine/:path*',
+    '/reminders/:path*',
+    '/settings/:path*',
+    '/emergency/:path*',
+    '/log/:path*',
     '/',
     '/signup',
   ],

@@ -1,16 +1,16 @@
-const CACHE_NAME = 'sevacare-offline-v10';
-const DYNAMIC_CACHE = 'sevacare-dynamic-v10';
+const CACHE_NAME = 'sevacare-offline-v11';
+const DYNAMIC_CACHE = 'sevacare-dynamic-v11';
 
 // Full list of application routes to pre-cache for 95%+ offline capability
 const ASSETS_TO_CACHE = [
   '/',
   '/dashboard',
-  '/dashboard/residents',
-  '/dashboard/voice-assistant',
-  '/dashboard/telemedicine',
-  '/dashboard/batch-log',
-  '/dashboard/emergency',
-  '/dashboard/settings',
+  '/residents',
+  '/voice-assistant',
+  '/telemedicine',
+  '/reminders',
+  '/emergency',
+  '/settings',
   '/dashboard/privacy',
   '/offline',
   '/manifest.json',

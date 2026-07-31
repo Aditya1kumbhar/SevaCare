@@ -16,11 +16,11 @@ type TranslationKey = keyof typeof translations['en']
 
 const NAV_ITEMS: { name: string; tKey: TranslationKey; href: string; icon: any; mobile: boolean }[] = [
   { name: 'Dashboard', tKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard, mobile: true },
-  { name: 'Residents', tKey: 'residents', href: '/dashboard/residents', icon: Users, mobile: true },
-  { name: 'Voice Assistant', tKey: 'voiceAssistant', href: '/dashboard/voice-assistant', icon: Mic, mobile: true },
-  { name: 'Telemedicine', tKey: 'telemedicine', href: '/dashboard/telemedicine', icon: Video, mobile: true },
-  { name: 'Reminders', tKey: 'reminders', href: '/dashboard/batch-log', icon: Bell, mobile: true },
-  { name: 'Settings', tKey: 'systemConfig', href: '/dashboard/settings', icon: Settings, mobile: false },
+  { name: 'Residents', tKey: 'residents', href: '/residents', icon: Users, mobile: true },
+  { name: 'Voice Assistant', tKey: 'voiceAssistant', href: '/voice-assistant', icon: Mic, mobile: true },
+  { name: 'Telemedicine', tKey: 'telemedicine', href: '/telemedicine', icon: Video, mobile: true },
+  { name: 'Reminders', tKey: 'reminders', href: '/reminders', icon: Bell, mobile: true },
+  { name: 'Settings', tKey: 'systemConfig', href: '/settings', icon: Settings, mobile: false },
 ]
 
 export default async function DashboardLayout({
@@ -91,7 +91,7 @@ export default async function DashboardLayout({
            </div>
            
            <div className="flex items-center gap-2 z-20">
-             <AnimatedNavLink href="/dashboard/settings" isMobile={true} className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-700 shrink-0">
+             <AnimatedNavLink href="/settings" isMobile={true} className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-700 shrink-0">
                <Settings className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
              </AnimatedNavLink>
              <SyncStatusIndicator />
