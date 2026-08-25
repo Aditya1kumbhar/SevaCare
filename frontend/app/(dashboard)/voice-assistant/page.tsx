@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume2, AlertTriangle, Activity, Languages, Bot, User, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Volume2, AlertTriangle, Activity, Languages, Bot, User, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { analyzeTranscript, getLanguageCode } from '@/lib/voice-commands';
@@ -23,8 +23,12 @@ export default function VoiceAssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const isMediaRecordingRef = useRef<boolean>(false);
   const finalTextRef = useRef('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [typedText, setTypedText] = useState('');
   const supabase = createClient();
 
   useEffect(() => {
@@ -158,11 +162,86 @@ export default function VoiceAssistantPage() {
     }
   };
 
-  // ─── Start mic (Google Assistant style: one press, auto-stops after speech) ───
+  // ─── Direct MediaRecorder + Whisper Audio Transcription Fallback ───
+  const startMediaRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      isMediaRecordingRef.current = true;
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        isMediaRecordingRef.current = false;
+        stream.getTracks().forEach(t => t.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+        if (audioBlob.size > 1000) {
+          setIsProcessing(true);
+          setLiveText('Transcribing audio with Whisper AI...');
+          try {
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'speech.webm');
+            formData.append('language', language);
+
+            const res = await fetch('/api/transcribe', {
+              method: 'POST',
+              body: formData,
+            });
+            const data = await res.json();
+            if (data.success && data.text) {
+              sendToAI(data.text, language);
+            } else {
+              toast.error('Could not transcribe audio. Please try speaking again.');
+              setIsProcessing(false);
+              setLiveText('');
+            }
+          } catch {
+            toast.error('Transcription network error.');
+            setIsProcessing(false);
+            setLiveText('');
+          }
+        } else {
+          setIsProcessing(false);
+          setLiveText('');
+        }
+      };
+
+      mediaRecorder.start();
+      setIsListening(true);
+      setLiveText('🎙️ Recording voice (Whisper AI)...');
+    } catch (err: any) {
+      setIsListening(false);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        toast.error('Microphone permission denied. Please allow mic in browser settings.');
+      } else {
+        toast.error('Mic initialization error. You can type below instead.');
+      }
+    }
+  };
+
+  const stopMediaRecording = () => {
+    if (mediaRecorderRef.current && isMediaRecordingRef.current) {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {}
+    }
+    setIsListening(false);
+  };
+
+  // ─── Start mic (Web Speech API with Auto-Whisper Fallback on Network Error) ───
   const startMic = () => {
     if (typeof window === 'undefined') return;
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast.error('Speech recognition not supported in this browser.'); return; }
+
+    if (!SR) {
+      // If Web Speech API not available (e.g. Firefox), use direct MediaRecorder + Whisper
+      startMediaRecording();
+      return;
+    }
 
     // Stop any previous instance
     try { recognitionRef.current?.abort(); } catch {}
@@ -196,8 +275,13 @@ export default function VoiceAssistantPage() {
       setIsListening(false);
       if (e.error === 'not-allowed') {
         toast.error('Microphone blocked. Go to browser settings and allow microphone access for this site.');
+      } else if (e.error === 'network') {
+        console.log('[Web Speech] Network error from Google speech server. Falling back to Whisper AI recorder...');
+        toast.info('Switching to Whisper AI recording...');
+        startMediaRecording();
       } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        toast.error('Mic error: ' + e.error);
+        console.log('[Web Speech] Error:', e.error);
+        startMediaRecording();
       }
     };
 
@@ -209,12 +293,20 @@ export default function VoiceAssistantPage() {
       }
     };
 
-    try { rec.start(); } catch {}
+    try {
+      rec.start();
+    } catch {
+      startMediaRecording();
+    }
   };
 
   const stopMic = () => {
-    try { recognitionRef.current?.stop(); } catch {}
-    setIsListening(false);
+    if (isMediaRecordingRef.current) {
+      stopMediaRecording();
+    } else {
+      try { recognitionRef.current?.stop(); } catch {}
+      setIsListening(false);
+    }
   };
 
   // ─── Send to Gemini AI and get response ───
@@ -391,6 +483,41 @@ export default function VoiceAssistantPage() {
               </div>
             )}
             <div ref={chatEndRef} />
+          </div>
+
+          {/* Chat Message Input Bar (Type in Marathi/Hindi/English) */}
+          <div className="border-t p-3 bg-muted/10 flex items-center gap-2">
+            <input
+              type="text"
+              value={typedText}
+              onChange={(e) => setTypedText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && typedText.trim()) {
+                  e.preventDefault();
+                  const text = typedText.trim();
+                  setTypedText('');
+                  sendToAI(text, language);
+                }
+              }}
+              placeholder={language === 'Marathi' ? 'येथे मराठीत लिहा (किंवा खालील माइक दाबा)...' : language === 'Hindi' ? 'यहाँ हिंदी में लिखें (या नीचे माइक दबाएं)...' : 'Type message here or tap mic below...'}
+              className="flex-1 bg-background border rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-muted-foreground/60"
+              disabled={isProcessing}
+            />
+            <Button
+              size="sm"
+              disabled={!typedText.trim() || isProcessing}
+              onClick={() => {
+                if (typedText.trim()) {
+                  const text = typedText.trim();
+                  setTypedText('');
+                  sendToAI(text, language);
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-4 shadow-sm"
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Send</span>
+            </Button>
           </div>
 
           {/* Mic Button with Anime.js Audio Wave / Ripple Effect */}
