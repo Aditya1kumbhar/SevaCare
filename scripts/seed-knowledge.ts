@@ -3,13 +3,40 @@
  * with Gemini embeddings for RAG retrieval.
  *
  * Run: npx tsx scripts/seed-knowledge.ts
- * Requires: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, GEMINI_API_KEY in .env.local
  */
 
-import 'dotenv/config';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Load .env.local manually
+function loadEnv() {
+  const envPaths = [
+    path.resolve(process.cwd(), 'frontend/.env.local'),
+    path.resolve(process.cwd(), '.env.local'),
+    path.resolve(process.cwd(), '../frontend/.env.local'),
+  ];
+
+  for (const p of envPaths) {
+    if (fs.existsSync(p)) {
+      const content = fs.readFileSync(p, 'utf8');
+      content.split('\n').forEach(line => {
+        const [k, ...v] = line.split('=');
+        if (k && v.length) {
+          const key = k.trim();
+          const val = v.join('=').trim();
+          if (!process.env[key]) process.env[key] = val;
+        }
+      });
+      console.log(`Loaded environment from ${p}`);
+      break;
+    }
+  }
+}
+
+loadEnv();
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pdzwxijuktpmcvnodnzn.supabase.co';
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkend4aWp1a3RwbWN2bm9kbnpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5ODU1ODcsImV4cCI6MjEwMDU2MTU4N30.o0xgeFSLXc74dAruCTR_I9dr8mBdQ_8sI21qX1yqMzY';
 const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY!;
 
 async function embedText(text: string): Promise<number[]> {
@@ -95,7 +122,7 @@ async function main() {
     console.log(`[${i + 1}/${CHUNKS.length}] Category: ${chunk.metadata.category} / ${chunk.metadata.topic}`);
     await insertChunk(chunk.content, chunk.metadata);
     // Rate limit: Gemini free tier is 15 RPM for embeddings
-    if (i < CHUNKS.length - 1) await new Promise(r => setTimeout(r, 1500));
+    if (i < CHUNKS.length - 1) await new Promise(r => setTimeout(r, 1200));
   }
 
   console.log('\n✅ Done! All knowledge chunks seeded.');
