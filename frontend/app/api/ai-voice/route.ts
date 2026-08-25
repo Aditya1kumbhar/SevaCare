@@ -59,7 +59,7 @@ Respond with a JSON object: {"type","severity","audio_response","summary"}`;
     // LAYER 1: Gemini Flash (free tier, best Marathi, structured JSON)
     // ════════════════════════════════════════════════════
     if (geminiKey) {
-      for (const model of ['gemini-3.6-flash', 'gemini-3.7-flash']) {
+      for (const model of ['gemini-1.5-flash']) {
         try {
           const res = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
@@ -100,7 +100,7 @@ Respond with a JSON object: {"type","severity","audio_response","summary"}`;
       try {
         const groq = new Groq({ apiKey: groqKey });
         const completion = await groq.chat.completions.create({
-          model: 'openai/gpt-oss-120b',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
