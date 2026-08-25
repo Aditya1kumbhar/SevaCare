@@ -75,51 +75,15 @@ export default function VoiceAssistantPage() {
     }
   };
 
-  // ─── Speak AI response out loud (Puter.js → API → Browser SpeechSynthesis) ───
+  // ─── Speak AI response out loud (High-Quality Marathi/Hindi Server TTS → Browser Speech) ───
   const speak = async (text: string, lang: string) => {
     if (typeof window === 'undefined') return;
 
     const code = getLanguageCode(lang);
     const short = code.split('-')[0]; // 'mr', 'hi', 'en'
 
-    // ════════════════════════════════════════════
-    // LAYER 0 (TOP PRIORITY): Puter.js Client-Side TTS — no API key needed
-    // ════════════════════════════════════════════
-    const playPuterTTS = async (txt: string): Promise<boolean> => {
-      try {
-        const puter = (window as any).puter;
-        if (!puter?.ai?.txt2speech) return false;
-        const audio = await puter.ai.txt2speech(txt);
-        if (audio && typeof audio.play === 'function') {
-          audio.volume = 1.0;
-          await audio.play();
-          return true;
-        }
-        return false;
-      } catch (e) {
-        console.log('[TTS] Puter.js TTS failed, falling back:', e);
-        return false;
-      }
-    };
-
-    // LAYER 1: Browser SpeechSynthesis (Good for English)
-    const playBrowserTTS = (txt: string, langCode: string) => {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(txt);
-      u.lang = langCode;
-      u.rate = 1.0;
-      u.pitch = 1.0;
-      const voices = window.speechSynthesis.getVoices();
-      const sh = langCode.split('-')[0];
-      const match = voices.find(v => v.lang.toLowerCase().startsWith(sh)) ||
-                    voices.find(v => v.name.toLowerCase().includes(lang.toLowerCase()));
-      if (match) u.voice = match;
-      window.speechSynthesis.speak(u);
-    };
-
-    // LAYER 2: High-Quality Server TTS API for Indian Languages (Hindi, Marathi)
-    const playApiTTS = async (txt: string, langCode: string) => {
+    // LAYER 1: High-Quality Direct Server TTS API for Indian Languages (Marathi, Hindi, English)
+    const playApiTTS = async (txt: string, langCode: string): Promise<boolean> => {
       try {
         const response = await fetch('/api/tts', {
           method: 'POST',
@@ -135,29 +99,37 @@ export default function VoiceAssistantPage() {
         if (audioSrc) {
           const audio = new Audio(audioSrc);
           audio.volume = 1.0;
-          await audio.play().catch(e => {
-            console.log('Audio playback blocked by browser, falling back', e);
-            playBrowserTTS(txt, code);
-          });
-        } else {
-          playBrowserTTS(txt, code);
+          await audio.play();
+          return true;
         }
+        return false;
       } catch (e) {
-        console.log('TTS API Error, falling back to browser TTS', e);
-        playBrowserTTS(txt, code);
+        console.log('TTS API playback error, falling back to browser TTS:', e);
+        return false;
       }
     };
 
-    // ─── Execution Logic ───
-    // Try Puter.js first (works for all languages, client-side, no API keys)
-    window.speechSynthesis?.cancel();
-    const puterSuccess = await playPuterTTS(text);
-    if (puterSuccess) return;
+    // LAYER 2: Browser SpeechSynthesis Fallback
+    const playBrowserTTS = (txt: string, langCode: string) => {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(txt);
+      u.lang = langCode;
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const sh = langCode.split('-')[0];
+      const match = voices.find(v => v.lang.toLowerCase().startsWith(sh)) ||
+                    voices.find(v => v.name.toLowerCase().includes(lang.toLowerCase()));
+      if (match) u.voice = match;
+      window.speechSynthesis.speak(u);
+    };
 
-    // If Puter.js failed, use existing fallback chain
-    if (short === 'mr' || short === 'hi') {
-      await playApiTTS(text, short);
-    } else {
+    // ─── Execution Logic ───
+    window.speechSynthesis?.cancel();
+    // Prioritize high-quality server TTS for natural Marathi/Hindi spoken output
+    const apiSuccess = await playApiTTS(text, short || 'mr');
+    if (!apiSuccess) {
       playBrowserTTS(text, code);
     }
   };
