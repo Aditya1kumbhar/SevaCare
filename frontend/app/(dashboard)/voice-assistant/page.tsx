@@ -17,7 +17,7 @@ export default function VoiceAssistantPage() {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [liveText, setLiveText] = useState('');
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState('Marathi');
   const [residents, setResidents] = useState<Resident[]>([]);
   const [selectedResident, setSelectedResident] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -71,14 +71,34 @@ export default function VoiceAssistantPage() {
     }
   };
 
-  // ─── Speak AI response out loud (with native API fallback for Marathi/Hindi) ───
+  // ─── Speak AI response out loud (Puter.js → API → Browser SpeechSynthesis) ───
   const speak = async (text: string, lang: string) => {
     if (typeof window === 'undefined') return;
 
     const code = getLanguageCode(lang);
     const short = code.split('-')[0]; // 'mr', 'hi', 'en'
 
-    // Method 1: Browser SpeechSynthesis (Good for English)
+    // ════════════════════════════════════════════
+    // LAYER 0 (TOP PRIORITY): Puter.js Client-Side TTS — no API key needed
+    // ════════════════════════════════════════════
+    const playPuterTTS = async (txt: string): Promise<boolean> => {
+      try {
+        const puter = (window as any).puter;
+        if (!puter?.ai?.txt2speech) return false;
+        const audio = await puter.ai.txt2speech(txt);
+        if (audio && typeof audio.play === 'function') {
+          audio.volume = 1.0;
+          await audio.play();
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.log('[TTS] Puter.js TTS failed, falling back:', e);
+        return false;
+      }
+    };
+
+    // LAYER 1: Browser SpeechSynthesis (Good for English)
     const playBrowserTTS = (txt: string, langCode: string) => {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -94,7 +114,7 @@ export default function VoiceAssistantPage() {
       window.speechSynthesis.speak(u);
     };
 
-    // Method 2: High-Quality TTS API for Indian Languages (Hindi, Marathi)
+    // LAYER 2: High-Quality Server TTS API for Indian Languages (Hindi, Marathi)
     const playApiTTS = async (txt: string, langCode: string) => {
       try {
         const response = await fetch('/api/tts', {
@@ -124,9 +144,14 @@ export default function VoiceAssistantPage() {
       }
     };
 
-    // Execution Logic
+    // ─── Execution Logic ───
+    // Try Puter.js first (works for all languages, client-side, no API keys)
+    window.speechSynthesis?.cancel();
+    const puterSuccess = await playPuterTTS(text);
+    if (puterSuccess) return;
+
+    // If Puter.js failed, use existing fallback chain
     if (short === 'mr' || short === 'hi') {
-      window.speechSynthesis?.cancel(); // stop any ongoing browser speech
       await playApiTTS(text, short);
     } else {
       playBrowserTTS(text, code);
@@ -278,9 +303,9 @@ export default function VoiceAssistantPage() {
         <div className="flex items-center gap-2">
           <Languages className="w-4 h-4 text-muted-foreground" />
           <select className="bg-background border rounded-lg px-3 py-2 text-sm font-medium" value={language} onChange={e => setLanguage(e.target.value)}>
-            <option value="English">English</option>
-            <option value="Hindi">हिंदी (Hindi)</option>
             <option value="Marathi">मराठी (Marathi)</option>
+            <option value="Hindi">हिंदी (Hindi)</option>
+            <option value="English">English</option>
           </select>
         </div>
       </div>
@@ -399,7 +424,7 @@ export default function VoiceAssistantPage() {
                 {isListening ? '🎙️ Listening...' : isProcessing ? '🤖 Processing Voice...' : 'Tap Mic to Speak'}
               </p>
               <p className="text-xs text-muted-foreground mt-1 font-medium">
-                {isListening ? 'Speak naturally in English, Hindi, or Marathi' : isProcessing ? 'AI is analyzing your request' : 'Hands-free regional voice assistant'}
+                {isListening ? 'मराठी, हिंदी किंवा इंग्रजीमध्ये बोला' : isProcessing ? 'AI तुमची विनंती विश्लेषित करत आहे' : 'हँड्स-फ्री प्रादेशिक व्हॉइस असिस्टंट'}
               </p>
             </div>
           </div>

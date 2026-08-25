@@ -51,6 +51,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Puter.js AI SDK – powers client-side TTS and other AI features */}
+        <script src="https://js.puter.com/v2/" defer />
         {/* Anti-flicker: set dark class BEFORE first paint */}
         <script dangerouslySetInnerHTML={{ __html: `
           try {

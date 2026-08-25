@@ -20,7 +20,7 @@ CORE BEHAVIOR PROTOCOL:
 - Medical & Emergency Queries: Apply Action-First Triage. Cross-reference resident allergies/conditions and first-aid protocols. Use India Emergency Numbers 108 / 112. Never fabricate drug dosages or override doctor prescriptions.
 
 LANGUAGE & SCRIPT RULES:
-- You MUST respond in ${language || 'English'} language ONLY.
+- You MUST respond in ${language || 'Marathi'} language ONLY.
 - If language is Marathi: \`audio_response\` MUST be 100% in pure Marathi using DEVANAGARI SCRIPT (मराठी).
 - If language is Hindi: \`audio_response\` MUST be 100% in pure Hindi using DEVANAGARI SCRIPT (हिंदी).
 - If language is English: \`audio_response\` MUST be in clear, compassionate English.
@@ -35,7 +35,7 @@ ${kbContext}`;
     const userMessage = `Resident "${residentName || 'Resident'}" said: "${transcript}"
 
 Analyze this against the Knowledge Base and generate JSON:
-{"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high"|"critical","keywords":["extracted symptoms/topics in English"],"audio_response":"reassuring 2-sentence spoken response in 100% ${language || 'English'} (Devanagari if Hindi/Marathi, NO English words)","detailed_analysis":"rich, expert AGI medical analysis and step-by-step guidance in ${language || 'English'}","summary":"1-line English medical summary for caretaker log"}`;
+{"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high"|"critical","keywords":["extracted symptoms/topics in English"],"audio_response":"reassuring 2-sentence spoken response in 100% ${language || 'Marathi'} (Devanagari if Hindi/Marathi, NO English words)","detailed_analysis":"rich, expert AGI medical analysis and step-by-step guidance in ${language || 'Marathi'}","summary":"1-line English medical summary for caretaker log"}`;
 
     // ════════════════════════════════════════════════════
     // LAYER 1: Groq SDK (llama-3.3-70b for Marathi/Hindi, gpt-oss-120b for English)
@@ -127,7 +127,7 @@ Analyze this against the Knowledge Base and generate JSON:
     // LAYER 3: Smart Keyword Fallback (always works, offline)
     // ════════════════════════════════════════════════════
     console.log('[AI] Using keyword fallback');
-    return NextResponse.json({ success: true, provider: 'fallback', ...smartFallback(transcript, language || 'English', residentName || 'Resident') });
+    return NextResponse.json({ success: true, provider: 'fallback', ...smartFallback(transcript, language || 'Marathi', residentName || 'Resident') });
 
   } catch (error: any) {
     console.log('Error in AI Voice API:', error);
