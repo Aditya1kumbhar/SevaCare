@@ -31,95 +31,136 @@ WORKSPACE KNOWLEDGE BASE & CLINICAL SOPS:
 ${kbContext}`;
 
     const groqKey = process.env.GROQ_API_KEY;
-    if (!groqKey) {
-      return NextResponse.json({ success: true, provider: 'fallback', ...smartFallback(transcript, language || 'Marathi', residentName || 'Resident') });
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+    // ════════════════════════════════════════════════════
+    // LAYER 1: Groq (openai/gpt-oss-120b) with Tool Calling
+    // ════════════════════════════════════════════════════
+    if (groqKey) {
+      try {
+        const groq = new Groq({ apiKey: groqKey });
+        const model = 'openai/gpt-oss-120b';
+
+        let messages: any[] = [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Resident "${residentName || 'Resident'}" said: "${transcript}"` }
+        ];
+
+        let loopCount = 0;
+        const maxLoops = 2;
+
+        while (loopCount < maxLoops) {
+          loopCount++;
+          const response = await groq.chat.completions.create({
+            model: model,
+            messages: messages,
+            tools: AI_TOOLS,
+            tool_choice: "auto",
+            temperature: 0.2,
+            max_tokens: 1200,
+          });
+
+          const responseMessage = response.choices[0].message;
+          const toolCalls = responseMessage.tool_calls;
+
+          if (toolCalls && toolCalls.length > 0) {
+            messages.push(responseMessage);
+            for (const toolCall of toolCalls) {
+              const functionName = toolCall.function.name;
+              const functionArgs = JSON.parse(toolCall.function.arguments || '{}');
+              console.log(`[AGI Agent] Executing Tool: ${functionName}`, functionArgs);
+              const toolResult = await executeAiTool(functionName, functionArgs);
+              messages.push({
+                tool_call_id: toolCall.id,
+                role: "tool",
+                name: functionName,
+                content: toolResult,
+              });
+            }
+          } else {
+            messages.push(responseMessage);
+            messages.push({
+              role: "user",
+              content: `Now, output ONLY a JSON object with:
+{
+  "type": "emergency" | "symptom" | "general",
+  "severity": "low" | "medium" | "high" | "critical",
+  "audio_response": "Concise spoken response in 100% pure ${language || 'Marathi'} using Devanagari script. Maximum 2 short sentences.",
+  "detailed_analysis": "Optional clinical advice in ${language || 'Marathi'}",
+  "summary": "1-line English medical summary"
+}`
+            });
+
+            const finalResponse = await groq.chat.completions.create({
+              model: model,
+              messages: messages,
+              temperature: 0.2,
+              max_tokens: 1200,
+              response_format: { type: 'json_object' }
+            });
+
+            const rawJson = finalResponse.choices[0]?.message?.content || '';
+            const parsed = extractJSON(rawJson);
+            if (parsed && parsed.audio_response) {
+              console.log(`[AGI Agent] Groq Success:`, parsed.audio_response);
+              return NextResponse.json({ success: true, provider: 'groq-agentic-loop', ...parsed });
+            }
+            break;
+          }
+        }
+      } catch (groqErr: any) {
+        console.log('[AGI Agent] Groq Layer Error:', groqErr.message);
+      }
     }
 
-    const groq = new Groq({ apiKey: groqKey });
-    const model = (language === 'Marathi' || language === 'Hindi') ? 'llama-3.3-70b-versatile' : 'llama-3.3-70b-versatile';
-
-    let messages: any[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: `Resident "${residentName || 'Resident'}" said: "${transcript}"` }
-    ];
-
-    // ─── AGENTIC LOOP ───
-    const maxLoops = 3;
-    let loopCount = 0;
-    
-    while (loopCount < maxLoops) {
-      loopCount++;
-      
-      const response = await groq.chat.completions.create({
-        model: model,
-        messages: messages,
-        tools: AI_TOOLS,
-        tool_choice: "auto",
-        temperature: 0.1, // Low temp for logic/tool calling
-        max_tokens: 1000,
-      });
-
-      const responseMessage = response.choices[0].message;
-      const toolCalls = responseMessage.tool_calls;
-
-      if (toolCalls && toolCalls.length > 0) {
-        // AI decided to use a tool
-        messages.push(responseMessage);
-        
-        for (const toolCall of toolCalls) {
-          const functionName = toolCall.function.name;
-          const functionArgs = JSON.parse(toolCall.function.arguments);
-          
-          console.log(`[AGI Agent] Executing Tool: ${functionName}`, functionArgs);
-          const toolResult = await executeAiTool(functionName, functionArgs);
-          
-          messages.push({
-            tool_call_id: toolCall.id,
-            role: "tool",
-            name: functionName,
-            content: toolResult,
-          });
-        }
-        // Loop continues to let the AI process the tool result
-      } else {
-        // AI provided a final text response instead of calling a tool.
-        // We now ask it to structure the output using Chain of Thought JSON.
-        messages.push(responseMessage);
-        messages.push({
-          role: "user",
-          content: `Based on your reasoning and any tool data, generate the final output in JSON format exactly matching this schema:
+    // ════════════════════════════════════════════════════
+    // LAYER 2: Google Gemini (gemini-3.6-flash / 3.7-flash) Fallback
+    // ════════════════════════════════════════════════════
+    if (geminiKey) {
+      for (const gemModel of ['gemini-3.6-flash', 'gemini-3.7-flash']) {
+        try {
+          const gemPrompt = `${systemPrompt}\n\nResident "${residentName || 'Resident'}" said: "${transcript}"\n\nGenerate JSON response:
 {
-  "internal_monologue": "Your step-by-step clinical reasoning in English. Be precise.",
-  "type": "emergency"|"symptom"|"general",
-  "severity": "low"|"medium"|"high"|"critical",
-  "audio_response": "The concise, 2-sentence spoken response in ${language || 'Marathi'} (Devanagari). MUST be under 150 chars. Extremely direct and reassuring.",
-  "summary": "1-line English medical summary for caretaker log"
-}`
-        });
+  "type": "emergency" | "symptom" | "general",
+  "severity": "low" | "medium" | "high" | "critical",
+  "audio_response": "Concise spoken response in 100% pure ${language || 'Marathi'} using Devanagari script. Maximum 2 short sentences.",
+  "detailed_analysis": "Optional clinical advice in ${language || 'Marathi'}",
+  "summary": "1-line English medical summary"
+}`;
 
-        const finalResponse = await groq.chat.completions.create({
-          model: model,
-          messages: messages,
-          temperature: 0.2,
-          max_tokens: 500,
-          response_format: { type: 'json_object' }
-        });
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${gemModel}:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: gemPrompt }] }],
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 2048,
+                responseMimeType: "application/json"
+              }
+            })
+          });
 
-        const rawJson = finalResponse.choices[0].message.content || '';
-        const parsed = extractJSON(rawJson);
-        
-        if (parsed) {
-          console.log(`[AGI Agent] Final output generated after ${loopCount} loops.`);
-          return NextResponse.json({ success: true, provider: 'groq-agentic-loop', ...parsed });
-        } else {
-           break; // Parsing failed, drop to fallback
+          if (res.ok) {
+            const data = await res.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const parsed = extractJSON(rawText);
+            if (parsed && parsed.audio_response) {
+              console.log(`[AGI Agent] Gemini ${gemModel} Success:`, parsed.audio_response);
+              return NextResponse.json({ success: true, provider: `gemini-${gemModel}`, ...parsed });
+            }
+          }
+        } catch (gemErr: any) {
+          console.log(`[AGI Agent] Gemini ${gemModel} Error:`, gemErr.message);
         }
       }
     }
 
-    // Fallback if loop breaks or fails
-    console.log('[AGI Agent] Loop exhausted or JSON parse failed, using fallback.');
-    return NextResponse.json({ success: true, provider: 'fallback', ...smartFallback(transcript, language || 'Marathi', residentName || 'Resident') });
+    // ════════════════════════════════════════════════════
+    // LAYER 3: Smart Keyword Fallback (Instant Offline Guarantee)
+    // ════════════════════════════════════════════════════
+    console.log('[AGI Agent] Using smart fallback layer.');
+    return NextResponse.json({ success: true, provider: 'smart-fallback', ...smartFallback(transcript, language || 'Marathi', residentName || 'Resident') });
 
   } catch (error: any) {
     console.log('Error in AI Voice API:', error);
