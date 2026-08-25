@@ -28,6 +28,8 @@ export default function VoiceAssistantPage() {
   const isMediaRecordingRef = useRef<boolean>(false);
   const finalTextRef = useRef('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const activeRequestRef = useRef<number>(0);
   const [typedText, setTypedText] = useState('');
   const supabase = createClient();
 
@@ -97,7 +99,12 @@ export default function VoiceAssistantPage() {
         const audioSrc = data.audioUrl || (data.audioUrls ? data.audioUrls[0] : null) || (data.audioChunks ? `data:audio/mp3;base64,${data.audioChunks[0]}` : null);
 
         if (audioSrc) {
+          if (activeAudioRef.current) {
+            activeAudioRef.current.pause();
+            activeAudioRef.current = null;
+          }
           const audio = new Audio(audioSrc);
+          activeAudioRef.current = audio;
           audio.volume = 1.0;
           await audio.play();
           return true;
@@ -126,6 +133,10 @@ export default function VoiceAssistantPage() {
     };
 
     // ─── Execution Logic ───
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
     window.speechSynthesis?.cancel();
     // Prioritize high-quality server TTS for natural Marathi/Hindi spoken output
     const apiSuccess = await playApiTTS(text, short || 'mr');
@@ -286,6 +297,9 @@ export default function VoiceAssistantPage() {
     setIsProcessing(true);
     setLiveText('');
 
+    const currentReq = Date.now();
+    activeRequestRef.current = currentReq;
+
     // Add user bubble
     setMessages(prev => [...prev, { id: 'u' + Date.now(), role: 'user', text, timestamp: new Date() }]);
 
@@ -310,6 +324,12 @@ export default function VoiceAssistantPage() {
         type = data.type || 'general';
       }
     } catch {}
+
+    // Check if this request is still the active one before proceeding
+    if (activeRequestRef.current !== currentReq) {
+      console.log('Stale TTS request ignored.');
+      return;
+    }
 
     // Fallback if no reply
     if (!reply) {

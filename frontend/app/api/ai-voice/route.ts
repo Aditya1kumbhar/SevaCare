@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { KNOWLEDGE_BASE } from '@/lib/knowledge-base';
+import { AI_TOOLS, executeAiTool } from '@/lib/ai-tools';
 import Groq from 'groq-sdk';
 
-// ─── Groq (openai/gpt-oss-120b AGI via SDK) → Gemini → Smart Fallback ───
 export async function POST(request: Request) {
   try {
     const { transcript, language, residentName } = await request.json();
@@ -13,120 +13,112 @@ export async function POST(request: Request) {
 
     const kbContext = JSON.stringify(KNOWLEDGE_BASE, null, 2);
 
-    const systemPrompt = `You are "MediAssist" (SevaCare AGI) — an exceptionally intelligent, deeply empathetic, world-class AI Medical Companion for elderly residents in Indian old-age homes. You combine high medical expertise with the warmth, emotional intelligence, and natural conversational fluency of OpenAI GPT-4o and Claude 3.5 Sonnet.
+    const systemPrompt = `You are "MediAssist" — an autonomous, highly intelligent Medical AGI for elderly residents in Indian old-age homes. You have tools available to fetch resident profiles, log symptoms, and trigger emergency alerts.
 
 CORE BEHAVIOR PROTOCOL:
-- Everyday Conversation: Respond naturally, warmly, and conversationally. Match user energy without robotic fillers.
-- Medical & Emergency Queries: Apply Action-First Triage. Cross-reference resident allergies/conditions and first-aid protocols. Use India Emergency Numbers 108 / 112. Never fabricate drug dosages or override doctor prescriptions.
+- You MUST ACT on the user's input using your tools if needed (e.g. check their profile before giving medication advice, or trigger an emergency if they report falling).
+- You are strictly bound to brevity. Your spoken audio response MUST BE UNDER 2 SENTENCES (max 150 characters). Do NOT give page-filling answers. Be concise, direct, and reassuring.
+- Think before you act or speak.
 
 LANGUAGE & SCRIPT RULES:
 - You MUST respond in ${language || 'Marathi'} language ONLY.
 - If language is Marathi: \`audio_response\` MUST be 100% in pure Marathi using DEVANAGARI SCRIPT (मराठी).
 - If language is Hindi: \`audio_response\` MUST be 100% in pure Hindi using DEVANAGARI SCRIPT (हिंदी).
-- If language is English: \`audio_response\` MUST be in clear, compassionate English.
-- NEVER mix English words or Roman script into \`audio_response\` when language is Marathi or Hindi.
-- Keep \`audio_response\` to 2 concise, reassuring spoken sentences (under 180 characters) so text-to-speech audio plays instantly.
+- NEVER mix English words into the spoken response for Marathi/Hindi.
 - Address the resident warmly by name: "${residentName || 'Resident'}".
-- Put any detailed clinical reasoning, first-aid SOPs, and caretaker notes into \`detailed_analysis\`.
 
 WORKSPACE KNOWLEDGE BASE & CLINICAL SOPS:
 ${kbContext}`;
 
-    const userMessage = `Resident "${residentName || 'Resident'}" said: "${transcript}"
-
-Analyze this against the Knowledge Base and generate JSON:
-{"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high"|"critical","keywords":["extracted symptoms/topics in English"],"audio_response":"reassuring 2-sentence spoken response in 100% ${language || 'Marathi'} (Devanagari if Hindi/Marathi, NO English words)","detailed_analysis":"rich, expert AGI medical analysis and step-by-step guidance in ${language || 'Marathi'}","summary":"1-line English medical summary for caretaker log"}`;
-
-    // ════════════════════════════════════════════════════
-    // LAYER 1: Groq SDK (llama-3.3-70b for Marathi/Hindi, gpt-oss-120b for English)
-    // ════════════════════════════════════════════════════
     const groqKey = process.env.GROQ_API_KEY;
-
-    if (groqKey) {
-      try {
-        const groq = new Groq({ apiKey: groqKey });
-        let chatCompletion;
-
-        // llama-3.3-70b-versatile delivers unmatched native Marathi & Hindi fluency
-        const primaryModel = (language === 'Marathi' || language === 'Hindi') 
-          ? 'llama-3.3-70b-versatile' 
-          : 'openai/gpt-oss-120b';
-
-        const secondaryModel = primaryModel === 'openai/gpt-oss-120b' 
-          ? 'llama-3.3-70b-versatile' 
-          : 'openai/gpt-oss-120b';
-
-        try {
-          chatCompletion = await groq.chat.completions.create({
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userMessage }
-            ],
-            model: primaryModel,
-            temperature: 0.65,
-            max_tokens: 1000,
-            response_format: { type: 'json_object' }
-          });
-        } catch (e) {
-          console.log(`[AI] ${primaryModel} failed via SDK, falling back to ${secondaryModel}`);
-          chatCompletion = await groq.chat.completions.create({
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userMessage }
-            ],
-            model: secondaryModel,
-            temperature: 0.65,
-            max_tokens: 1000,
-            response_format: { type: 'json_object' }
-          });
-        }
-
-        const rawText = chatCompletion.choices?.[0]?.message?.content || '';
-        const parsed = extractJSON(rawText);
-        if (parsed) {
-          console.log('[AI] Groq SDK response OK');
-          return NextResponse.json({ success: true, provider: 'groq-sdk', ...parsed });
-        }
-      } catch (e: any) {
-        console.log('[AI] Groq SDK error:', e.message);
-      }
+    if (!groqKey) {
+      return NextResponse.json({ success: true, provider: 'fallback', ...smartFallback(transcript, language || 'Marathi', residentName || 'Resident') });
     }
 
-    // ════════════════════════════════════════════════════
-    // LAYER 2: Gemini — BACKUP
-    // ════════════════════════════════════════════════════
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const groq = new Groq({ apiKey: groqKey });
+    const model = (language === 'Marathi' || language === 'Hindi') ? 'llama-3.3-70b-versatile' : 'llama-3.3-70b-versatile';
 
-    if (geminiKey) {
-      try {
-        const prompt = `${systemPrompt}\n\n${userMessage}`;
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 400, response_mime_type: "application/json" }
-          })
+    let messages: any[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `Resident "${residentName || 'Resident'}" said: "${transcript}"` }
+    ];
+
+    // ─── AGENTIC LOOP ───
+    const maxLoops = 3;
+    let loopCount = 0;
+    
+    while (loopCount < maxLoops) {
+      loopCount++;
+      
+      const response = await groq.chat.completions.create({
+        model: model,
+        messages: messages,
+        tools: AI_TOOLS,
+        tool_choice: "auto",
+        temperature: 0.1, // Low temp for logic/tool calling
+        max_tokens: 1000,
+      });
+
+      const responseMessage = response.choices[0].message;
+      const toolCalls = responseMessage.tool_calls;
+
+      if (toolCalls && toolCalls.length > 0) {
+        // AI decided to use a tool
+        messages.push(responseMessage);
+        
+        for (const toolCall of toolCalls) {
+          const functionName = toolCall.function.name;
+          const functionArgs = JSON.parse(toolCall.function.arguments);
+          
+          console.log(`[AGI Agent] Executing Tool: ${functionName}`, functionArgs);
+          const toolResult = await executeAiTool(functionName, functionArgs);
+          
+          messages.push({
+            tool_call_id: toolCall.id,
+            role: "tool",
+            name: functionName,
+            content: toolResult,
+          });
+        }
+        // Loop continues to let the AI process the tool result
+      } else {
+        // AI provided a final text response instead of calling a tool.
+        // We now ask it to structure the output using Chain of Thought JSON.
+        messages.push(responseMessage);
+        messages.push({
+          role: "user",
+          content: `Based on your reasoning and any tool data, generate the final output in JSON format exactly matching this schema:
+{
+  "internal_monologue": "Your step-by-step clinical reasoning in English. Be precise.",
+  "type": "emergency"|"symptom"|"general",
+  "severity": "low"|"medium"|"high"|"critical",
+  "audio_response": "The concise, 2-sentence spoken response in ${language || 'Marathi'} (Devanagari). MUST be under 150 chars. Extremely direct and reassuring.",
+  "summary": "1-line English medical summary for caretaker log"
+}`
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          const parsed = extractJSON(rawText);
-          if (parsed) {
-            console.log('[AI] Gemini response OK');
-            return NextResponse.json({ success: true, provider: 'gemini', ...parsed });
-          }
+        const finalResponse = await groq.chat.completions.create({
+          model: model,
+          messages: messages,
+          temperature: 0.2,
+          max_tokens: 500,
+          response_format: { type: 'json_object' }
+        });
+
+        const rawJson = finalResponse.choices[0].message.content || '';
+        const parsed = extractJSON(rawJson);
+        
+        if (parsed) {
+          console.log(`[AGI Agent] Final output generated after ${loopCount} loops.`);
+          return NextResponse.json({ success: true, provider: 'groq-agentic-loop', ...parsed });
+        } else {
+           break; // Parsing failed, drop to fallback
         }
-      } catch (e: any) {
-        console.log('[AI] Gemini error:', e.message);
       }
     }
 
-    // ════════════════════════════════════════════════════
-    // LAYER 3: Smart Keyword Fallback (always works, offline)
-    // ════════════════════════════════════════════════════
-    console.log('[AI] Using keyword fallback');
+    // Fallback if loop breaks or fails
+    console.log('[AGI Agent] Loop exhausted or JSON parse failed, using fallback.');
     return NextResponse.json({ success: true, provider: 'fallback', ...smartFallback(transcript, language || 'Marathi', residentName || 'Resident') });
 
   } catch (error: any) {
