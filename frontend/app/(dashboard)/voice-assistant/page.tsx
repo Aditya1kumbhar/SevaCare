@@ -305,63 +305,75 @@ export default function VoiceAssistantPage() {
 
     let reply = '';
     let type = 'general';
-
     let spokenText = '';
+
     try {
       const resObj = residents.find(r => r.id === selectedResident);
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => controller.abort(), 8000);
+
       const res = await fetch('/api/ai-voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript: text, language: lang, residentName: resObj?.name || 'Resident' })
+        body: JSON.stringify({ transcript: text, language: lang, residentName: resObj?.name || 'Resident' }),
+        signal: controller.signal
       });
-      const data = await res.json();
-      if (data?.audio_response) {
-        spokenText = data.audio_response;
-        reply = data.audio_response;
-        if (data.detailed_analysis && data.detailed_analysis.trim()) {
-          reply += `\n\n📋 Clinical Guidance:\n${data.detailed_analysis}`;
+      clearTimeout(fetchTimeout);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.audio_response) {
+          spokenText = data.audio_response;
+          reply = data.audio_response;
+          if (data.detailed_analysis && data.detailed_analysis.trim()) {
+            reply += `\n\n📋 Clinical Guidance:\n${data.detailed_analysis}`;
+          }
+          type = data.type || 'general';
         }
-        type = data.type || 'general';
       }
-    } catch {}
+    } catch (err) {
+      console.log('AI voice API fetch error / timeout, falling back:', err);
+    } finally {
+      // Check if this request is still the active one before UI update
+      if (activeRequestRef.current !== currentReq) {
+        console.log('Stale TTS request ignored.');
+        setIsProcessing(false);
+        return;
+      }
 
-    // Check if this request is still the active one before proceeding
-    if (activeRequestRef.current !== currentReq) {
-      console.log('Stale TTS request ignored.');
-      return;
+      // Fallback if no reply
+      if (!reply) {
+        const a = analyzeTranscript(text, lang);
+        type = a.type;
+        reply = lang === 'Hindi'
+          ? (type === 'emergency' ? 'कृपया तुरंत बैठ जाएं, शांत रहें! मैंने आपातकालीन टीम को सूचित कर दिया है।' : type === 'symptom' ? 'कृपया आराम करें, मैंने आपका लक्षण दर्ज कर लिया है।' : 'आपकी बात नोट कर ली गई है।')
+          : lang === 'Marathi'
+          ? (type === 'emergency' ? 'कृपया ताबडतोब खाली बसा! मी आपत्कालीन पथकाला कळवले आहे.' : type === 'symptom' ? 'कृपया विश्रांती घ्या, मी नोंद घेतली आहे.' : 'तुमची नोंद घेतली आहे.')
+          : (type === 'emergency' ? 'Please sit down immediately and stay calm! I have alerted the emergency team.' : type === 'symptom' ? 'Please rest, I have recorded your symptom for the doctor.' : 'Your message has been logged. A caretaker will assist you.');
+        spokenText = reply;
+      }
+
+      // Add AI bubble
+      setMessages(prev => [...prev, { id: 'a' + Date.now(), role: 'ai', text: reply, type, timestamp: new Date() }]);
+
+      // Speak ONLY the audio_response out loud!
+      speak(spokenText || reply, lang);
+
+      // Save to DB
+      if (type === 'emergency') {
+        try { supabase.from('emergency_alerts').insert({ resident_id: selectedResident, alert_type: 'medical', severity: 'high', description: `[AI Voice] ${text}` }); } catch {}
+        toast.error('🚨 Emergency alert created!', { duration: 5000 });
+      } else if (type === 'symptom') {
+        try {
+          supabase.auth.getUser().then(({ data }) => {
+            supabase.from('daily_logs').insert({ resident_id: selectedResident, caretaker_id: data.user?.id, status: 'fair', notes: `[AI Voice] ${text}` });
+          });
+        } catch {}
+        toast.success('📋 Symptom recorded');
+      }
+
+      setIsProcessing(false);
     }
-
-    // Fallback if no reply
-    if (!reply) {
-      const a = analyzeTranscript(text, lang);
-      type = a.type;
-      reply = lang === 'Hindi'
-        ? (type === 'emergency' ? 'कृपया तुरंत बैठ जाएं, शांत रहें! मैंने आपातकालीन टीम को सूचित कर दिया है।' : type === 'symptom' ? 'कृपया आराम करें, मैंने आपका लक्षण दर्ज कर लिया है।' : 'आपकी बात नोट कर ली गई है।')
-        : lang === 'Marathi'
-        ? (type === 'emergency' ? 'कृपया ताबडतोब खाली बसा! मी आपत्कालीन पथकाला कळवले आहे.' : type === 'symptom' ? 'कृपया विश्रांती घ्या, मी नोंद घेतली आहे.' : 'तुमची नोंद घेतली आहे.')
-        : (type === 'emergency' ? 'Please sit down immediately and stay calm! I have alerted the emergency team.' : type === 'symptom' ? 'Please rest, I have recorded your symptom for the doctor.' : 'Your message has been logged. A caretaker will assist you.');
-      spokenText = reply;
-    }
-
-    // Add AI bubble
-    setMessages(prev => [...prev, { id: 'a' + Date.now(), role: 'ai', text: reply, type, timestamp: new Date() }]);
-
-    // Speak ONLY the audio_response out loud!
-    speak(spokenText || reply, lang);
-
-    // Save to DB
-    if (type === 'emergency') {
-      try { await supabase.from('emergency_alerts').insert({ resident_id: selectedResident, alert_type: 'medical', severity: 'high', description: `[AI Voice] ${text}` }); } catch {}
-      toast.error('🚨 Emergency alert created!', { duration: 5000 });
-    } else if (type === 'symptom') {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        await supabase.from('daily_logs').insert({ resident_id: selectedResident, caretaker_id: user?.id, status: 'fair', notes: `[AI Voice] ${text}` });
-      } catch {}
-      toast.success('📋 Symptom recorded');
-    }
-
-    setIsProcessing(false);
   };
 
   const handleQuickTest = (text: string, lang: string) => {
