@@ -43,6 +43,47 @@ export async function POST(request: Request) {
     const shortText = cleanText.length > 220 ? cleanText.substring(0, 220) + '...' : cleanText;
 
     // ════════════════════════════════════════════════════
+    // LAYER 0: AI4Bharat Indic-Parler-TTS (State-of-the-Art Marathi & Indic Voice)
+    // ════════════════════════════════════════════════════
+    const indicTtsUrl = process.env.INDIC_PARLER_TTS_URL || 'http://localhost:8000/synthesize';
+    if (indicTtsUrl) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout for fast fallback
+
+        const indicRes = await fetch(indicTtsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: shortText,
+            language: languageCode,
+            description: languageCode === 'mr' 
+              ? 'A compassionate female speaker with a clear, calm, moderate-paced voice and natural Marathi accent.'
+              : languageCode === 'hi'
+              ? 'A compassionate female speaker with a clear, calm, moderate-paced voice and natural Hindi accent.'
+              : 'A clear, warm, and natural speaking voice.'
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (indicRes.ok) {
+          const indicData = await indicRes.json();
+          if (indicData.audioUrl) {
+            console.log('[TTS] AI4Bharat Indic-Parler-TTS OK');
+            return NextResponse.json({
+              success: true,
+              provider: 'indic-parler-tts',
+              audioUrl: indicData.audioUrl
+            });
+          }
+        }
+      } catch (e: any) {
+        console.log('[TTS] Indic-Parler-TTS unavailable, falling back to cloud layers:', e.message);
+      }
+    }
+
+    // ════════════════════════════════════════════════════
     // LAYER 1: Google Gemini 2.5 Flash Native Multimodal Audio Voice Engine (Studio Quality)
     // ════════════════════════════════════════════════════
     const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
