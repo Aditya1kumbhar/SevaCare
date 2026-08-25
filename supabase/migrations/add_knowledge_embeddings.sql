@@ -42,8 +42,13 @@ begin
 end;
 $$;
 
--- Allow anon/authenticated to read knowledge chunks
+-- Allow anon/authenticated to read and write knowledge chunks
 alter table public.knowledge_chunks enable row level security;
 create policy "Anyone can read knowledge_chunks"
   on public.knowledge_chunks for select
   using (true);
+
+create policy "Anyone can insert knowledge_chunks"
+  on public.knowledge_chunks for insert
+  with check (true);
+

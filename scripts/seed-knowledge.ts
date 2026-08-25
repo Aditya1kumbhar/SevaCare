@@ -45,7 +45,7 @@ async function embedText(text: string): Promise<number[]> {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: { parts: [{ text }] } }),
+      body: JSON.stringify({ content: { parts: [{ text }] }, outputDimensionality: 768 }),
     }
   );
   if (!res.ok) throw new Error(`Embedding API error: ${res.status}`);

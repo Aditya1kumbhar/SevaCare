@@ -24,6 +24,7 @@ export async function embedText(text: string): Promise<number[]> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: { parts: [{ text }] },
+          outputDimensionality: 768,
         }),
         signal: controller.signal
       }
