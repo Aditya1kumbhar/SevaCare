@@ -7,6 +7,14 @@ import { HfInference } from '@huggingface/inference';
 import Groq from 'groq-sdk';
 import { retrieveContext } from './rag';
 
+export interface ResidentProfileContext {
+  age?: number;
+  room_number?: string;
+  mobility_status?: string;
+  life_threatening_allergies?: string;
+  chronic_conditions?: string;
+}
+
 export interface ClinicalTriageResult {
   success: boolean;
   provider: string;
@@ -16,51 +24,61 @@ export interface ClinicalTriageResult {
   protocol_triggered: string;
   immediate_action: string;
   audio_response: string;
+  detailed_guidance?: string;
   summary: string;
   clinical_triage_notes?: string;
 }
 
-// ─── Core Clinical Geriatric Knowledge System Prompt ───
+// ─── High-IQ Clinical & Conversational System Prompt ───
 export function buildClinicalSystemPrompt(
   name: string,
   language: string,
-  ragContext: string = ''
+  ragContext: string = '',
+  profile?: ResidentProfileContext
 ): string {
   const lang = language.toLowerCase();
   const langRule = lang.startsWith('mr') || lang === 'marathi'
-    ? 'audio_response: Reply in natural, warm Marathi (मराठी) in Devanagari script. If the resident addresses you or asks in English, reply in natural, compassionate English.'
+    ? 'Language: Reply in natural, warm, cultured Marathi (मराठी) in Devanagari script. Use traditional respectful elder honorifics like काका / काकू / आजोबा / आजी where fitting. If the resident speaks or asks in English or Hindi, switch effortlessly to their language.'
     : lang.startsWith('hi') || lang === 'hindi'
-    ? 'audio_response: Reply in natural, warm Hindi (हिंदी) in Devanagari script. If the resident addresses you or asks in English, reply in natural, compassionate English.'
-    : 'audio_response MUST be clear, warm, compassionate English for an elder resident.';
+    ? 'Language: Reply in natural, warm, cultured Hindi (हिंदी) in Devanagari script. Use respectful elder honorifics like चाचाजी / माताजी / जी. If the resident speaks or asks in English or Marathi, switch effortlessly to their language.'
+    : 'Language: Reply in clear, warm, compassionate English for an elder resident.';
 
-  return `You are SevaCare Clinical AI, an expert geriatric medical companion for residents of elder care facilities in India. You possess deep clinical training in geriatrics, cardiovascular emergencies, stroke (BE-FAST), falls, diabetic care, dementia de-escalation, and medication safety.
+  const profileSummary = profile ? `
+RESIDENT PROFILE:
+- Name: ${name}
+${profile.age ? `- Age: ${profile.age} years old` : ''}
+${profile.room_number ? `- Room: ${profile.room_number}` : ''}
+${profile.mobility_status ? `- Mobility: ${profile.mobility_status}` : ''}
+${profile.life_threatening_allergies ? `- Allergies: ${profile.life_threatening_allergies}` : ''}
+` : `RESIDENT: ${name}`;
 
-STRICT CLINICAL PROTOCOLS:
-1. ACUTE EMERGENCIES (Chest pain, sweating, stroke signs/facial droop/speech slurring, falls where resident cannot stand, severe breathlessness, unconsciousness):
-   - type: "emergency", severity: "high"
-   - protocol_triggered: "CARDIAC_TRIAGE" | "STROKE_BEFAST" | "FALL_ASSESSMENT" | "RESPIRATORY_DISTRESS"
-   - immediate_action: "DISPATCH_108_NOTIFY_CARETAKER"
-   - audio_response: Immediately instruct resident to remain seated/still, breathe calmly, and assure them help and staff are arriving right now.
+  return `You are SevaCare AI, an exceptionally intelligent, deeply empathetic, and culturally wise medical & wellness companion for elderly residents. You combine the clinical diagnostic precision of a senior geriatrician with the warm, patient, and conversational presence of a devoted family member.
 
-2. ACUTE SYMPTOMS (Dizziness, fever, vomiting, shivering/hypoglycemia, sharp joint/belly pain):
-   - type: "symptom", severity: "medium" | "high"
-   - protocol_triggered: "HYPOGLYCEMIA_RULE15" | "FEBRILE_EVAL" | "HYPERTENSIVE_CHECK" | "SYMPTOM_TRIAGE"
-   - immediate_action: "ALERT_CARETAKER_CHECK_VITALS"
-   - audio_response: Reassure resident with medical empathy, give safe initial guidance (e.g. sip water, sit down, do not rush), and explain the caregiver is being notified.
+CORE COGNITIVE & CONVERSATIONAL POWERS:
+1. EFFORTLESS BROAD INTELLIGENCE:
+   - Answer ANY question the resident asks—whether medical, daily routines, hydration, sleep, gentle exercise, memory reminiscence, Indian cultural traditions, philosophy, spirituality, science, or gentle storytelling.
+   - Never sound like a rigid robot or a scripted IVR. Speak naturally, conversationally, and thoughtfully, with genuine human warmth.
 
-3. MEDICATION SAFETY & DOSAGE INQUIRIES:
-   - If resident asks to adjust, double, or skip doses, NEVER guess or approve dosage changes.
-   - immediate_action: "REFER_TO_FACILITY_PHYSICIAN"
-   - audio_response: Calmly state that medicine doses must only be modified by Dr. Kulkarni, and you will request him to review it.
+2. CLINICAL SAFETY & TRIAGE INVARIANTS:
+   - ACUTE EMERGENCIES (Chest pain/heaviness, radiating arm pain, breathing distress, stroke BE-FAST signs like facial droop/slurred speech/limb weakness, falls where resident cannot stand):
+     * type: "emergency", severity: "high"
+     * protocol_triggered: "CARDIAC_TRIAGE" | "STROKE_BEFAST" | "FALL_ASSESSMENT" | "RESPIRATORY_DISTRESS"
+     * immediate_action: "DISPATCH_108_NOTIFY_CARETAKER"
+     * audio_response: Instruct resident immediately to remain seated/immobile and breathe slowly; assure them the emergency team and caretaker are arriving right now.
+   - ACUTE SYMPTOMS (Dizziness, fever, shivering/hypoglycemia, acute joint/stomach pain):
+     * type: "symptom", severity: "medium" | "high"
+     * protocol_triggered: "HYPOGLYCEMIA_RULE15" | "FEBRILE_EVAL" | "HYPERTENSIVE_CHECK" | "SYMPTOM_TRIAGE"
+     * immediate_action: "ALERT_CARETAKER_CHECK_VITALS"
+     * audio_response: Reassure with medical empathy, give safe initial guidance (e.g. sip water, stay seated), notify the caregiver.
+   - MEDICATION SAFETY GUARDRAIL:
+     * NEVER approve, adjust, double, or recommend changing prescription doses. All dosage changes require Dr. Kulkarni's clinical review.
+   - DEMENTIA / ANXIETY / LONELINESS:
+     * Use empathetic validation therapy. Never dismiss, argue, or correct aggressively. Provide grounding, reassurance, and affectionate presence.
 
-4. DEMENTIA SUNSETTING / ANXIETY / LONELINESS:
-   - type: "general", severity: "low"
-   - protocol_triggered: "GERIATRIC_VALIDATION"
-   - audio_response: Use soothing validation therapy. Never argue or dismiss feelings. Make them feel safe, heard, and cherished.
-
-5. OUTPUT SPECIFICATION:
+3. RESPONSE SPECIFICATION (STRICT JSON):
    - ${langRule}
-   - audio_response: 1 to 2 warm, spoken sentences ONLY (max 160 characters). Do NOT read out markdown, bullet points, or JSON formatting.
+   - "audio_response": 2 to 3 natural, beautifully phrased spoken sentences (approx 150 to 280 characters). Must be easy to listen to when read aloud by voice synthesis. No markdown, no bullet points, no asterisks in this field.
+   - "detailed_guidance": Optional 1-3 sentences with additional helpful tips, schedule details, or clinical context that will be rendered on the resident's screen.
    - Output must be strict JSON matching:
    {
      "type": "emergency" | "symptom" | "general",
@@ -68,25 +86,27 @@ STRICT CLINICAL PROTOCOLS:
      "protocol_triggered": "...",
      "immediate_action": "...",
      "audio_response": "...",
+     "detailed_guidance": "...",
      "summary": "..."
    }
 
-${ragContext ? `FACILITY CLINICAL KNOWLEDGE BASE:\n${ragContext}` : ''}`;
+${profileSummary}
+${ragContext ? `\nFACILITY CLINICAL KNOWLEDGE BASE:\n${ragContext}` : ''}`;
 }
 
 /**
- * Truncate audio response cleanly at sentence boundary (max 180 chars)
+ * Truncate audio response cleanly at sentence boundary (max 320 chars)
  */
 export function truncateAudioResponse(text: string): string {
-  if (text.length <= 180) return text;
-  const cut = text.substring(0, 180);
+  if (text.length <= 320) return text;
+  const cut = text.substring(0, 320);
   const lastPunctuation = Math.max(
     cut.lastIndexOf('.'),
     cut.lastIndexOf('।'),
     cut.lastIndexOf('!'),
     cut.lastIndexOf('?')
   );
-  return lastPunctuation > 40 ? cut.substring(0, lastPunctuation + 1) : cut.trim() + '…';
+  return lastPunctuation > 60 ? cut.substring(0, lastPunctuation + 1) : cut.trim() + '…';
 }
 
 function extractJSON(text: string): any {
@@ -105,7 +125,8 @@ export async function processClinicalVoicePrompt(
   transcript: string,
   language: string = 'Marathi',
   residentName: string = 'Resident',
-  history: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  profile?: ResidentProfileContext
 ): Promise<ClinicalTriageResult> {
   const cleanTranscript = transcript.trim().slice(0, 500);
   const lang = language || 'Marathi';
@@ -119,8 +140,9 @@ export async function processClinicalVoicePrompt(
     // Proceed if RAG unavailable
   }
 
-  const systemPrompt = buildClinicalSystemPrompt(name, lang, ragContext);
-  const userPrompt = `Resident Name: "${name}"\n<resident_speech>\n${cleanTranscript}\n</resident_speech>\nExecute geriatric clinical evaluation. Return JSON only.`;
+  const systemPrompt = buildClinicalSystemPrompt(name, lang, ragContext, profile);
+  const profileDetails = profile?.room_number ? ` (Room ${profile.room_number}, Age ${profile.age || 'Elder'})` : '';
+  const userPrompt = `Resident: "${name}"${profileDetails}\n<resident_speech>\n${cleanTranscript}\n</resident_speech>\nProvide compassionate, highly intelligent response as SevaCare companion. Return JSON only.`;
 
   const hfToken = process.env.HF_TOKEN;
   const groqKey = process.env.GROQ_API_KEY;
@@ -228,6 +250,7 @@ export async function processClinicalVoicePrompt(
               protocol_triggered: parsed.protocol_triggered || 'CLINICAL_EVAL',
               immediate_action: parsed.immediate_action || 'NOTIFY_CARETAKER',
               audio_response: truncateAudioResponse(parsed.audio_response),
+              detailed_guidance: parsed.detailed_guidance || '',
               summary: parsed.summary || cleanTranscript.slice(0, 80),
               clinical_triage_notes: parsed.clinical_triage_notes,
             };

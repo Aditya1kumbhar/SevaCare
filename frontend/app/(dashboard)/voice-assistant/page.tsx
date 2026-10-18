@@ -9,7 +9,14 @@ import { createClient } from '@/lib/supabase/client';
 import { analyzeTranscript, getLanguageCode } from '@/lib/voice-commands';
 import anime from 'animejs';
 
-interface Resident { id: string; name: string; }
+interface Resident {
+  id: string;
+  name: string;
+  age?: number;
+  room_number?: string;
+  mobility_status?: string;
+  life_threatening_allergies?: string;
+}
 interface Message { id: string; role: 'user' | 'ai'; text: string; type?: string; timestamp: Date; }
 
 export default function VoiceAssistantPage() {
@@ -64,15 +71,21 @@ export default function VoiceAssistantPage() {
 
   const fetchResidents = async () => {
     try {
-      const { data, error } = await supabase.from('residents').select('id, name');
+      const { data, error } = await supabase
+        .from('residents')
+        .select('id, name, age, room_number, mobility_status, life_threatening_allergies');
       if (error || !data || data.length === 0) {
-        const fb = [{ id: 'demo-1', name: 'Rajesh Sharma' }, { id: 'demo-2', name: 'Priya Patel' }, { id: 'demo-3', name: 'Amitabh Verma' }];
+        const fb: Resident[] = [
+          { id: 'demo-1', name: 'Rajesh Sharma', age: 72, room_number: '101', mobility_status: 'Independent' },
+          { id: 'demo-2', name: 'Priya Patel', age: 68, room_number: '102', mobility_status: 'Cane' },
+          { id: 'demo-3', name: 'Amitabh Verma', age: 76, room_number: '103', mobility_status: 'Walker' }
+        ];
         setResidents(fb); setSelectedResident(fb[0].id); return;
       }
       setResidents(data as any);
       if (data.length > 0) setSelectedResident(data[0].id);
     } catch {
-      const fb = [{ id: 'demo-1', name: 'Rajesh Sharma' }];
+      const fb: Resident[] = [{ id: 'demo-1', name: 'Rajesh Sharma', age: 72, room_number: '101' }];
       setResidents(fb); setSelectedResident(fb[0].id);
     }
   };
@@ -324,7 +337,13 @@ export default function VoiceAssistantPage() {
           transcript: text,
           language: lang,
           residentName: resObj?.name || 'Resident',
-          history
+          history,
+          residentProfile: resObj ? {
+            age: resObj.age,
+            room_number: resObj.room_number,
+            mobility_status: resObj.mobility_status,
+            life_threatening_allergies: resObj.life_threatening_allergies
+          } : undefined
         }),
         signal: controller.signal
       });
@@ -335,7 +354,9 @@ export default function VoiceAssistantPage() {
         if (data?.audio_response) {
           spokenText = data.audio_response;
           reply = data.audio_response;
-          if (data.detailed_analysis && data.detailed_analysis.trim()) {
+          if (data.detailed_guidance && data.detailed_guidance.trim()) {
+            reply += `\n\n💡 Care Guidance:\n${data.detailed_guidance}`;
+          } else if (data.detailed_analysis && data.detailed_analysis.trim()) {
             reply += `\n\n📋 Clinical Guidance:\n${data.detailed_analysis}`;
           }
           type = data.type || 'general';

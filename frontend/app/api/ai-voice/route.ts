@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { transcript, language, residentName, history } = await request.json();
+    const { transcript, language, residentName, history, residentProfile } = await request.json();
 
     if (!transcript || typeof transcript !== 'string') {
       return NextResponse.json({ error: 'Valid transcript string is required' }, { status: 400 });
@@ -35,7 +35,15 @@ export async function POST(request: Request) {
           }))
       : [];
 
-    const result = await processClinicalVoicePrompt(cleanTranscript, lang, name, sanitizedHistory);
+    // Optional profile sanitization
+    const profile = residentProfile && typeof residentProfile === 'object' ? {
+      age: typeof residentProfile.age === 'number' ? residentProfile.age : undefined,
+      room_number: typeof residentProfile.room_number === 'string' ? residentProfile.room_number.slice(0, 20) : undefined,
+      mobility_status: typeof residentProfile.mobility_status === 'string' ? residentProfile.mobility_status.slice(0, 50) : undefined,
+      life_threatening_allergies: typeof residentProfile.life_threatening_allergies === 'string' ? residentProfile.life_threatening_allergies.slice(0, 100) : undefined
+    } : undefined;
+
+    const result = await processClinicalVoicePrompt(cleanTranscript, lang, name, sanitizedHistory, profile);
 
     return NextResponse.json(result);
   } catch (error: any) {

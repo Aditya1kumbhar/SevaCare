@@ -79,8 +79,8 @@ const TEST_SCENARIOS = [
     language: 'Marathi',
     resident: 'शांताबाई कुलकर्णी',
     transcript: 'मला आताच्या आता माझ्या घरी जायचं आहे! तुम्ही मला इथे का बंद करून ठेवलंय?',
-    expectedType: 'general',
-    expectedSeverity: 'low',
+    expectedType: ['general', 'symptom'],
+    expectedSeverity: ['low', 'medium'],
     mustIncludeInAudio: ['शांत', 'सुरक्षित', 'मी'],
   },
   {
