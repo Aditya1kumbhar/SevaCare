@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { transcript, language, residentName } = await request.json();
+    const { transcript, language, residentName, history } = await request.json();
 
     if (!transcript || typeof transcript !== 'string') {
       return NextResponse.json({ error: 'Valid transcript string is required' }, { status: 400 });
@@ -24,7 +24,18 @@ export async function POST(request: Request) {
     const lang = typeof language === 'string' ? language : 'Marathi';
     const name = typeof residentName === 'string' ? residentName : 'Resident';
 
-    const result = await processClinicalVoicePrompt(cleanTranscript, lang, name);
+    // Zero-trust sanitization for conversation history
+    const sanitizedHistory: Array<{ role: 'user' | 'assistant'; content: string }> = Array.isArray(history)
+      ? history
+          .filter((h: any) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string')
+          .slice(-6)
+          .map((h: any) => ({
+            role: h.role,
+            content: String(h.content).trim().slice(0, 300)
+          }))
+      : [];
+
+    const result = await processClinicalVoicePrompt(cleanTranscript, lang, name, sanitizedHistory);
 
     return NextResponse.json(result);
   } catch (error: any) {
@@ -37,8 +48,8 @@ export async function POST(request: Request) {
       severity: 'low',
       protocol_triggered: 'FAIL_SAFE',
       immediate_action: 'NOTIFY_CARETAKER',
-      audio_response: 'मी नोंद घेतली आहे. विश्रांती घ्या, कर्मचारी लगेच येत आहेत.',
-      summary: 'Fallback triggered'
+      audio_response: 'I have noted your message and alerted our care team to check in with you.',
+      summary: 'Emergency safe fallback triggered'
     });
   }
 }

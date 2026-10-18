@@ -102,6 +102,30 @@ const TEST_SCENARIOS = [
     expectedType: 'emergency',
     expectedSeverity: 'high',
     mustIncludeInAudio: ['बैठ', 'मदद', 'डॉक्टर'],
+  },
+  {
+    id: 9,
+    name: 'English Routine Guidance Inquiry ("what to do next")',
+    language: 'English',
+    resident: 'Vedanti',
+    transcript: 'what to do next',
+    expectedType: 'general',
+    expectedSeverity: 'low',
+    forbiddenInAudio: ['How can I support your comfort today?'], // Must NOT be the repetitive canned greeting
+  },
+  {
+    id: 10,
+    name: 'Multi-turn Conversational Repair ("why are you giving same answer")',
+    language: 'English',
+    resident: 'Vedanti',
+    transcript: 'but why are you giving same answer to every question?',
+    history: [
+      { role: 'user', content: 'what to do next' },
+      { role: 'assistant', content: 'We can check your daily routine together, Vedanti.' }
+    ],
+    expectedType: 'general',
+    expectedSeverity: 'low',
+    forbiddenInAudio: ['How can I support your comfort today?'], // Must address user directly, not repeat
   }
 ];
 
@@ -123,7 +147,7 @@ async function runEvaluation() {
 
     const start = Date.now();
     try {
-      const result = await processClinicalVoicePrompt(test.transcript, test.language, test.resident);
+      const result = await processClinicalVoicePrompt(test.transcript, test.language, test.resident, test.history || []);
       const latency = Date.now() - start;
 
       console.log(`  ⏱️ Latency: ${latency}ms | Provider: ${result.provider} | Model: ${result.model}`);

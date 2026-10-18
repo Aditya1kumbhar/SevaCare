@@ -310,12 +310,22 @@ export default function VoiceAssistantPage() {
     try {
       const resObj = residents.find(r => r.id === selectedResident);
       const controller = new AbortController();
-      const fetchTimeout = setTimeout(() => controller.abort(), 8000);
+      const fetchTimeout = setTimeout(() => controller.abort(), 12000);
+
+      const history = messages.slice(-6).map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
 
       const res = await fetch('/api/ai-voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript: text, language: lang, residentName: resObj?.name || 'Resident' }),
+        body: JSON.stringify({
+          transcript: text,
+          language: lang,
+          residentName: resObj?.name || 'Resident',
+          history
+        }),
         signal: controller.signal
       });
       clearTimeout(fetchTimeout);

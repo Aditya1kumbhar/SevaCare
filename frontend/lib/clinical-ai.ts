@@ -28,9 +28,9 @@ export function buildClinicalSystemPrompt(
 ): string {
   const lang = language.toLowerCase();
   const langRule = lang.startsWith('mr') || lang === 'marathi'
-    ? 'audio_response MUST be 100% natural, fluent Marathi (मराठी) in Devanagari script. Use warm, respectful elder address like काका / काकू / आजोबा / आजी where fitting.'
+    ? 'audio_response: Reply in natural, warm Marathi (मराठी) in Devanagari script. If the resident addresses you or asks in English, reply in natural, compassionate English.'
     : lang.startsWith('hi') || lang === 'hindi'
-    ? 'audio_response MUST be 100% natural, fluent Hindi (हिंदी) in Devanagari script. Use warm, respectful elder address like चाचाजी / माताजी / जी.'
+    ? 'audio_response: Reply in natural, warm Hindi (हिंदी) in Devanagari script. If the resident addresses you or asks in English, reply in natural, compassionate English.'
     : 'audio_response MUST be clear, warm, compassionate English for an elder resident.';
 
   return `You are SevaCare Clinical AI, an expert geriatric medical companion for residents of elder care facilities in India. You possess deep clinical training in geriatrics, cardiovascular emergencies, stroke (BE-FAST), falls, diabetic care, dementia de-escalation, and medication safety.
@@ -104,7 +104,8 @@ function extractJSON(text: string): any {
 export async function processClinicalVoicePrompt(
   transcript: string,
   language: string = 'Marathi',
-  residentName: string = 'Resident'
+  residentName: string = 'Resident',
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = []
 ): Promise<ClinicalTriageResult> {
   const cleanTranscript = transcript.trim().slice(0, 500);
   const lang = language || 'Marathi';
@@ -132,12 +133,15 @@ export async function processClinicalVoicePrompt(
   if (hfToken) {
     try {
       const hf = new HfInference(hfToken);
+      const hfMessages = [
+        { role: 'system', content: systemPrompt },
+        ...history.slice(-4).map(h => ({ role: h.role, content: h.content })),
+        { role: 'user', content: userPrompt },
+      ];
+
       const hfResponse = await hf.chatCompletion({
         model: 'Qwen/Qwen2.5-72B-Instruct',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
+        messages: hfMessages,
         temperature: 0.2,
         max_tokens: 350,
       });
@@ -159,56 +163,38 @@ export async function processClinicalVoicePrompt(
         };
       }
     } catch (err: any) {
-      console.warn('[ClinicalAI] Hugging Face inference failed, falling to Groq/Gemini:', err.message);
+      console.warn('[ClinicalAI] Hugging Face inference failed, falling to Gemini/Groq:', err.message);
     }
   }
 
   // ════════════════════════════════════════════════════
-  // TIER 2: Groq High-Speed Clinical Llama 3.3 70B
-  // ════════════════════════════════════════════════════
-  if (groqKey) {
-    try {
-      const groq = new Groq({ apiKey: groqKey });
-      const completion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.2,
-        max_tokens: 350,
-        response_format: { type: 'json_object' },
-      });
-
-      const raw = completion.choices[0]?.message?.content || '';
-      const parsed = extractJSON(raw);
-      if (parsed?.audio_response) {
-        return {
-          success: true,
-          provider: 'groq',
-          model: 'llama-3.3-70b-versatile',
-          type: parsed.type || 'general',
-          severity: parsed.severity || 'low',
-          protocol_triggered: parsed.protocol_triggered || 'CLINICAL_EVAL',
-          immediate_action: parsed.immediate_action || 'NOTIFY_CARETAKER',
-          audio_response: truncateAudioResponse(parsed.audio_response),
-          summary: parsed.summary || cleanTranscript.slice(0, 80),
-          clinical_triage_notes: parsed.clinical_triage_notes,
-        };
-      }
-    } catch (err: any) {
-      console.warn('[ClinicalAI] Groq failed, falling to Gemini:', err.message);
-    }
-  }
-
-  // ════════════════════════════════════════════════════
-  // TIER 3: Google Gemini Multimodal Flash
+  // TIER 2: Google Gemini Flash (gemini-3.8-flash, gemini-flash-latest)
   // ════════════════════════════════════════════════════
   if (geminiKey) {
-    for (const model of ['gemini-1.5-flash', 'gemini-2.0-flash']) {
+    const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-flash-latest'];
+    for (const model of candidateModels) {
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 4000);
+        const timer = setTimeout(() => controller.abort(), 8000);
+
+        const geminiContents = [
+          {
+            role: 'user',
+            parts: [{ text: systemPrompt }]
+          },
+          {
+            role: 'model',
+            parts: [{ text: '{"type": "general", "severity": "low", "audio_response": "Understood, I am ready to assist.", "summary": "System ready"}' }]
+          },
+          ...history.slice(-4).map(h => ({
+            role: h.role === 'user' ? 'user' : 'model',
+            parts: [{ text: h.content }]
+          })),
+          {
+            role: 'user',
+            parts: [{ text: userPrompt }]
+          }
+        ];
 
         const res = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
@@ -216,10 +202,10 @@ export async function processClinicalVoicePrompt(
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+              contents: geminiContents,
               generationConfig: {
-                temperature: 0.2,
-                maxOutputTokens: 350,
+                temperature: 0.3,
+                maxOutputTokens: 800,
                 responseMimeType: 'application/json',
               },
             }),
@@ -245,7 +231,12 @@ export async function processClinicalVoicePrompt(
               summary: parsed.summary || cleanTranscript.slice(0, 80),
               clinical_triage_notes: parsed.clinical_triage_notes,
             };
+          } else {
+            console.warn(`[ClinicalAI] Gemini ${model} returned unparseable response:`, raw);
           }
+        } else {
+          const errText = await res.text();
+          console.warn(`[ClinicalAI] Gemini ${model} HTTP ${res.status}:`, errText);
         }
       } catch (err: any) {
         console.warn(`[ClinicalAI] Gemini ${model} failed:`, err.message);
@@ -254,7 +245,46 @@ export async function processClinicalVoicePrompt(
   }
 
   // ════════════════════════════════════════════════════
-  // TIER 4: Deterministic Geriatric Safety Fallback
+  // TIER 3: Groq Clinical Llama 3.3 70B (if valid key)
+  // ════════════════════════════════════════════════════
+  if (groqKey) {
+    try {
+      const groq = new Groq({ apiKey: groqKey });
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...history.slice(-4).map(h => ({ role: h.role, content: h.content })),
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 350,
+        response_format: { type: 'json_object' },
+      });
+
+      const raw = completion.choices[0]?.message?.content || '';
+      const parsed = extractJSON(raw);
+      if (parsed?.audio_response) {
+        return {
+          success: true,
+          provider: 'groq',
+          model: 'llama-3.3-70b-versatile',
+          type: parsed.type || 'general',
+          severity: parsed.severity || 'low',
+          protocol_triggered: parsed.protocol_triggered || 'CLINICAL_EVAL',
+          immediate_action: parsed.immediate_action || 'NOTIFY_CARETAKER',
+          audio_response: truncateAudioResponse(parsed.audio_response),
+          summary: parsed.summary || cleanTranscript.slice(0, 80),
+          clinical_triage_notes: parsed.clinical_triage_notes,
+        };
+      }
+    } catch (err: any) {
+      console.warn('[ClinicalAI] Groq failed:', err.message);
+    }
+  }
+
+  // ════════════════════════════════════════════════════
+  // TIER 4: Dynamic Geriatric Safety Fallback
   // ════════════════════════════════════════════════════
   return clinicalRuleBasedFallback(cleanTranscript, lang, name);
 }
@@ -370,12 +400,52 @@ export function clinicalRuleBasedFallback(
     };
   }
 
-  // 6. General Empathetic Elder Greeting / Companionship
+  // 6. "What to do next" / Routine guidance query
+  if (t.includes('what to do') || t.includes('next') || t.includes('काय करू') || t.includes('पुढे काय') || t.includes('रूटीन') || t.includes('routine')) {
+    const audio = isMarathi
+      ? `${name}, आपण आपले औषध किंवा नाश्त्याचे वेळापत्रक पाहू शकतो, किंवा थोडे विश्रांती घेऊन संगीत ऐकू शकता. आपल्याला काय आवडेल?`
+      : isHindi
+      ? `${name} जी, हम आपका दवा या नाश्ते का रूटीन देख सकते हैं, या आप आराम करके संगीत सुन सकते हैं। आप क्या पसंद करेंगे?`
+      : `We can check your daily routine together, ${name}. Would you like to review your medications, have a drink of water, or relax for a bit?`;
+    return {
+      success: true,
+      provider: 'clinical-fallback',
+      model: 'routine-guidance-v1',
+      type: 'general',
+      severity: 'low',
+      protocol_triggered: 'GERIATRIC_WELLNESS',
+      immediate_action: 'CHECK_DAILY_SCHEDULE',
+      audio_response: audio,
+      summary: `Routine Guidance: ${transcript.slice(0, 60)}`,
+    };
+  }
+
+  // 7. Conversational inquiry / repetition complaint
+  if (t.includes('same answer') || t.includes('why are you') || t.includes('bot') || t.includes('पुन्हा पुन्हा') || t.includes('वही जवाब')) {
+    const audio = isMarathi
+      ? `माफ करा ${name}, मी आपले नीट ऐकत आहे. कृपया सांगा आपल्याला नेमकी काय अडचण आहे, मी पूर्ण मदत करतो.`
+      : isHindi
+      ? `क्षमा करें ${name} जी, मैं ध्यान से सुन रहा हूँ। कृपया बताएं आपको क्या सहायता चाहिए, मैं तुरंत मदद करूँगा।`
+      : `I apologize for that, ${name}. I am listening carefully now. Please tell me what you need assistance with, and I will help directly.`;
+    return {
+      success: true,
+      provider: 'clinical-fallback',
+      model: 'conversational-repair-v1',
+      type: 'general',
+      severity: 'low',
+      protocol_triggered: 'CONVERSATIONAL_REPAIR',
+      immediate_action: 'ATTEND_RESIDENT_NEED',
+      audio_response: audio,
+      summary: `Conversational Repair: ${transcript.slice(0, 60)}`,
+    };
+  }
+
+  // 8. General Empathetic Elder Greeting / Companionship
   const audio = isMarathi
     ? `नमस्ते ${name} काका! मी सेवाकेअर सहाय्यक आहे. मी आज आपल्यासाठी काय करू शकेन?`
     : isHindi
     ? `नमस्ते ${name} जी! मैं सेवाकेअर सहायक हूँ। आज मैं आपकी क्या सेवा कर सकता हूँ?`
-    : `Hello ${name}! I am SevaCare Assistant. How can I support your comfort today?`;
+    : `Hello ${name}! I am right here with you. How can I assist you right now?`;
   return {
     success: true,
     provider: 'clinical-fallback',
