@@ -91,7 +91,42 @@ export async function POST(request: Request) {
     }
 
     // ════════════════════════════════════════════════════
-    // LAYER 1: Google Gemini 2.5 Flash Native Multimodal Audio Voice Engine (Studio Quality)
+    // LAYER 1: Hugging Face Pre-Trained Meta MMS Indic Voice (facebook/mms-tts-mar & hin)
+    // ════════════════════════════════════════════════════
+    const hfToken = process.env.HF_TOKEN;
+    if (hfToken) {
+      try {
+        const { HfInference } = await import('@huggingface/inference');
+        const hf = new HfInference(hfToken);
+        const mmsModel = languageCode === 'mr' 
+          ? 'facebook/mms-tts-mar' 
+          : languageCode === 'hi' 
+          ? 'facebook/mms-tts-hin' 
+          : 'facebook/mms-tts-eng';
+
+        const audioBlob = await hf.textToSpeech({
+          model: mmsModel,
+          inputs: shortText,
+        });
+
+        const arrayBuf = await audioBlob.arrayBuffer();
+        const base64Audio = Buffer.from(arrayBuf).toString('base64');
+        const dataUri = `data:audio/flac;base64,${base64Audio}`;
+
+        console.log(`[TTS] Hugging Face Meta MMS (${mmsModel}) Success`);
+        return NextResponse.json({
+          success: true,
+          provider: 'huggingface-mms',
+          model: mmsModel,
+          audioUrl: dataUri,
+        });
+      } catch (e: any) {
+        console.log('[TTS] Hugging Face MMS failed, trying next layer:', e.message);
+      }
+    }
+
+    // ════════════════════════════════════════════════════
+    // LAYER 2: Google Gemini 2.5 Flash Native Multimodal Audio Voice Engine (Studio Quality)
     // ════════════════════════════════════════════════════
     const geminiKey = process.env.GEMINI_API_KEY;
 
