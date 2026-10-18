@@ -17,7 +17,7 @@ export default async function ResidentsPage() {
           <Translate id="residentDirectory" fallback="Resident Directory" />
         </h2>
         <Link 
-          href="/dashboard/residents/add" 
+          href="/residents/add" 
           className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold tracking-tight bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm rounded-xl"
         >
           <PlusSquare className="w-4 h-4" /> <Translate id="addPatient" fallback="Add Patient" />
@@ -35,7 +35,7 @@ export default async function ResidentsPage() {
           {residents.map((r, i) => (
             <div key={r.id} className="bg-white/80 backdrop-blur-md border border-white/50 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] rounded-2xl p-5 hover:bg-white transition-all group">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <Link href={`/dashboard/residents/${r.id}`} className="flex-1">
+                <Link href={`/residents/${r.id}`} className="flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
                     <h3 className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-all">{r.name}</h3>
                     <div className="flex flex-wrap gap-2">
@@ -52,7 +52,7 @@ export default async function ResidentsPage() {
                   </div>
                 </Link>
                 <Link 
-                  href={`/dashboard/log/${r.id}`}
+                  href={`/log/${r.id}`}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold tracking-tight bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded-xl transition-all"
                 >
                   <ClipboardList className="w-4 h-4" /> <Translate id="logEntry" fallback="Log Entry" />

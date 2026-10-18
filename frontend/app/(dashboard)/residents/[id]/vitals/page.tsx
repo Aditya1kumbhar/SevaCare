@@ -59,7 +59,7 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
         return
       }
 
-      if ((res as any).offline) {
+      if (result?.offline) {
         toast.info(t.vitalsSavedLocally, {
           icon: '☁️'
         })
@@ -67,7 +67,7 @@ export default function LogVitalsPage({ params }: { params: Promise<{ id: string
         toast.success(t.vitalsSecured)
       }
 
-      router.push(`/dashboard/residents/${id}`)
+      router.push(`/residents/${id}`)
       router.refresh()
     } catch (err) {
       console.log(err)

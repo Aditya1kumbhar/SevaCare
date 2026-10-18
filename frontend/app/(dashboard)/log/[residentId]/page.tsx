@@ -81,7 +81,7 @@ export default function LogStatusPage({ params }: { params: Promise<{ residentId
         return
       }
 
-      if ((res as any).offline) {
+      if (result?.offline) {
         toast.info(t.savedLocallySyncOnline, {
           icon: '☁️',
         })

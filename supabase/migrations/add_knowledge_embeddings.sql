@@ -16,7 +16,6 @@ create index if not exists knowledge_chunks_embedding_idx
   using ivfflat (embedding extensions.vector_cosine_ops)
   with (lists = 10);
 
--- RPC function: match knowledge chunks by cosine similarity
 create or replace function public.match_knowledge(
   query_embedding extensions.vector(768),
   match_count int default 3
@@ -28,6 +27,7 @@ returns table (
   similarity float
 )
 language plpgsql
+set search_path = public, extensions
 as $$
 begin
   return query
@@ -44,10 +44,13 @@ $$;
 
 -- Allow anon/authenticated to read and write knowledge chunks
 alter table public.knowledge_chunks enable row level security;
+
+drop policy if exists "Anyone can read knowledge_chunks" on public.knowledge_chunks;
 create policy "Anyone can read knowledge_chunks"
   on public.knowledge_chunks for select
   using (true);
 
+drop policy if exists "Anyone can insert knowledge_chunks" on public.knowledge_chunks;
 create policy "Anyone can insert knowledge_chunks"
   on public.knowledge_chunks for insert
   with check (true);

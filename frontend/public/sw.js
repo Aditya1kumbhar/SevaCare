@@ -115,6 +115,29 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// Push event handler for web push notifications
+self.addEventListener('push', (event) => {
+  let data = { title: 'SevaCare Alert', body: 'New notification received' };
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    if (event.data) data.body = event.data.text();
+  }
+
+  const options = {
+    body: data.body || '',
+    icon: '/icon-light-32x32.png',
+    badge: '/icon-light-32x32.png',
+    tag: data.tag || 'sevacare-alert',
+    requireInteraction: true,
+    data: data,
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title || 'SevaCare Alert', options));
+});
+
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
@@ -123,12 +146,12 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of clientList) {
         if ('focus' in client) {
           client.focus();
-          client.navigate('/dashboard/emergency');
+          client.navigate('/emergency');
           return;
         }
       }
       if (self.clients.openWindow) {
-        return self.clients.openWindow('/dashboard/emergency');
+        return self.clients.openWindow('/emergency');
       }
     })
   );

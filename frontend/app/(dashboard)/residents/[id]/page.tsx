@@ -61,18 +61,18 @@ export default async function ResidentDetailPage({ params }: { params: Promise<{
           </div>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full md:w-auto">
-          <Link href={`/dashboard/residents/${resident.id}/edit`} className="flex flex-col items-center justify-center p-4 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 shadow-sm rounded-2xl transition-all">
+          <Link href={`/residents/${resident.id}/edit`} className="flex flex-col items-center justify-center p-4 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 shadow-sm rounded-2xl transition-all">
             <Edit className="w-5 h-5 mb-1.5" />
             <span className="text-xs font-semibold"><Translate id="edit" fallback="Edit" /></span>
           </Link>
           <div className="flex">
              <PdfDownloadButton resident={resident} healthRecords={healthRecords || []} logs={recentLogs || []} />
           </div>
-          <Link href={`/dashboard/residents/${resident.id}/vitals`} className="flex flex-col items-center justify-center p-4 bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 shadow-sm rounded-2xl transition-all">
+          <Link href={`/residents/${resident.id}/vitals`} className="flex flex-col items-center justify-center p-4 bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 shadow-sm rounded-2xl transition-all">
             <Activity className="w-5 h-5 mb-1.5" />
             <span className="text-xs font-semibold text-slate-500"><Translate id="vitals" fallback="Vitals" /></span>
           </Link>
-          <Link href={`/dashboard/log/${resident.id}`} className="flex flex-col items-center justify-center p-4 bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 shadow-sm rounded-2xl transition-all">
+          <Link href={`/log/${resident.id}`} className="flex flex-col items-center justify-center p-4 bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 shadow-sm rounded-2xl transition-all">
             <ClipboardList className="w-5 h-5 mb-1.5" />
             <span className="text-xs font-semibold text-slate-500"><Translate id="log" fallback="Log" /></span>
           </Link>

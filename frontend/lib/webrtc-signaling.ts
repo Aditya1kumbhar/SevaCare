@@ -1,13 +1,27 @@
 import { createClient } from '@/lib/supabase/client'
 import { RealtimeChannel } from '@supabase/supabase-js'
 
-export const ICE_SERVERS = {
-  iceServers: [
-    {
-      urls: ['stun:stun.l.google.com:19302']
-    }
+export const getIceServers = (): RTCConfiguration => {
+  const turnServer = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_TURN_SERVER_URL : undefined
+  const turnUsername = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_TURN_USERNAME : undefined
+  const turnCredential = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_TURN_CREDENTIAL : undefined
+
+  const servers: RTCIceServer[] = [
+    { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
   ]
+
+  if (turnServer) {
+    servers.push({
+      urls: [turnServer],
+      username: turnUsername,
+      credential: turnCredential,
+    })
+  }
+
+  return { iceServers: servers }
 }
+
+export const ICE_SERVERS = getIceServers()
 
 export type BandwidthMode = 'LOW' | 'NORMAL'
 

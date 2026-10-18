@@ -1,18 +1,30 @@
 import { NextResponse } from 'next/server';
 import { retrieveContext } from '@/lib/rag';
+import { createClient } from '@/lib/supabase/server';
 import Groq from 'groq-sdk';
 
 // ─── Fast, single-shot LLM with layered fallback and strict brevity ───
 export async function POST(request: Request) {
   try {
-    const { transcript, language, residentName } = await request.json();
-
-    if (!transcript) {
-      return NextResponse.json({ error: 'Transcript is required' }, { status: 400 });
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const lang = language || 'Marathi';
-    const name = residentName || 'Resident';
+    const { transcript, language, residentName } = await request.json();
+
+    if (!transcript || typeof transcript !== 'string') {
+      return NextResponse.json({ error: 'Valid transcript string is required' }, { status: 400 });
+    }
+
+    const cleanTranscript = transcript.trim().slice(0, 500);
+    if (!cleanTranscript) {
+      return NextResponse.json({ error: 'Transcript cannot be empty' }, { status: 400 });
+    }
+
+    const lang = (typeof language === 'string' ? language : 'Marathi');
+    const name = (typeof residentName === 'string' ? residentName.replace(/["\\]/g, '').slice(0, 50) : 'Resident');
     const langInstruction = lang === 'Marathi'
       ? 'audio_response MUST be 100% Marathi in Devanagari (मराठी). NEVER use English words.'
       : lang === 'Hindi'
@@ -22,7 +34,7 @@ export async function POST(request: Request) {
     // ─── Fast RAG (non-blocking, max 1.5s) ───
     let ragContext = '';
     try {
-      ragContext = await retrieveContext(transcript, 3);
+      ragContext = await retrieveContext(cleanTranscript, 3);
     } catch {
       // RAG unavailable — proceed without context
     }
@@ -49,21 +61,24 @@ User: "मला चक्कर येत आहे आणि वेदना �
 User: "आज कसे आहात?"
 → {"type":"general","severity":"low","audio_response":"${name}, मी ठीक आहे! तुम्हाला आज काही मदत हवी का?","summary":"General greeting"}`;
 
-    const userMessage = `Resident "${name}" says: "${transcript}"
+    const userMessage = `Resident Name: "${name}"
+<resident_speech>
+${cleanTranscript}
+</resident_speech>
 
-Generate JSON response with format: {"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high","audio_response":"...","summary":"..."}`;
+Analyze the resident's statement inside <resident_speech>. Generate JSON response with format: {"type":"emergency"|"symptom"|"general","severity":"low"|"medium"|"high","audio_response":"...","summary":"..."}`;
 
     const groqKey = process.env.GROQ_API_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
 
     // ════════════════════════════════════════════════════
-    // LAYER 1: Groq (ultra-fast 1s inference with openai/gpt-oss-120b)
+    // LAYER 1: Groq (ultra-fast 1s inference with llama-3.3-70b-versatile)
     // ════════════════════════════════════════════════════
     if (groqKey) {
       try {
         const groq = new Groq({ apiKey: groqKey });
         const completion = await groq.chat.completions.create({
-          model: 'openai/gpt-oss-120b',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
@@ -77,8 +92,8 @@ Generate JSON response with format: {"type":"emergency"|"symptom"|"general","sev
         const parsed = extractJSON(rawJson);
         if (parsed?.audio_response) {
           parsed.audio_response = truncateAudio(parsed.audio_response);
-          console.log('[AI] Groq (gpt-oss-120b) Success:', parsed.audio_response);
-          return NextResponse.json({ success: true, provider: 'groq-120b', ...parsed });
+          console.log('[AI] Groq (llama-3.3-70b-versatile) Success:', parsed.audio_response);
+          return NextResponse.json({ success: true, provider: 'groq', ...parsed });
         }
       } catch (e: any) {
         console.log('[AI] Groq error, trying Gemini:', e.message);
@@ -86,10 +101,10 @@ Generate JSON response with format: {"type":"emergency"|"symptom"|"general","sev
     }
 
     // ════════════════════════════════════════════════════
-    // LAYER 2: Google Gemini (gemini-3.5-flash-lite / gemini-3.5-flash / gemini-3.6-flash)
+    // LAYER 2: Google Gemini (gemini-1.5-flash-8b / gemini-1.5-flash)
     // ════════════════════════════════════════════════════
     if (geminiKey) {
-      const candidateModels = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash'];
+      const candidateModels = ['gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-2.0-flash'];
       for (const model of candidateModels) {
         try {
           const controller = new AbortController();

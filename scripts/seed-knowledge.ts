@@ -35,9 +35,13 @@ function loadEnv() {
 
 loadEnv();
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pdzwxijuktpmcvnodnzn.supabase.co';
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkend4aWp1a3RwbWN2bm9kbnpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5ODU1ODcsImV4cCI6MjEwMDU2MTU4N30.o0xgeFSLXc74dAruCTR_I9dr8mBdQ_8sI21qX1yqMzY';
-const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY!;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY || !GEMINI_KEY) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, or GEMINI_API_KEY.');
+}
 
 async function embedText(text: string): Promise<number[]> {
   const res = await fetch(

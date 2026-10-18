@@ -239,3 +239,68 @@ CREATE INDEX IF NOT EXISTS schedules_date_idx ON schedules(shift_date);
 CREATE INDEX IF NOT EXISTS prescriptions_resident_idx ON prescriptions(resident_id);
 CREATE INDEX IF NOT EXISTS activities_resident_idx ON activities(resident_id);
 CREATE INDEX IF NOT EXISTS emergency_alerts_resident_idx ON emergency_alerts(resident_id);
+
+-- 15. Medication Administrations (Daily Adherence Sign-off)
+CREATE TABLE IF NOT EXISTS medication_administrations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  resident_id UUID NOT NULL REFERENCES residents(id) ON DELETE CASCADE,
+  medication_name TEXT NOT NULL,
+  scheduled_time TEXT NOT NULL,
+  administered_at TIMESTAMPTZ DEFAULT now(),
+  administered_by UUID REFERENCES auth.users(id),
+  notes TEXT
+);
+
+ALTER TABLE medication_administrations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Auth users can read medication_administrations" ON medication_administrations FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Auth users can insert medication_administrations" ON medication_administrations FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE INDEX IF NOT EXISTS med_admin_resident_idx ON medication_administrations(resident_id);
+CREATE INDEX IF NOT EXISTS med_admin_date_idx ON medication_administrations(administered_at DESC);
+
+-- 16. Vector Embeddings & RAG Knowledge Chunks
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
+
+CREATE TABLE IF NOT EXISTS public.knowledge_chunks (
+  id BIGSERIAL PRIMARY KEY,
+  content TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  embedding extensions.vector(768),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS knowledge_chunks_embedding_idx
+  ON public.knowledge_chunks
+  USING ivfflat (embedding extensions.vector_cosine_ops)
+  WITH (lists = 10);
+
+CREATE OR REPLACE FUNCTION public.match_knowledge(
+  query_embedding extensions.vector(768),
+  match_count INT DEFAULT 3
+)
+RETURNS TABLE (
+  id BIGINT,
+  content TEXT,
+  metadata JSONB,
+  similarity FLOAT
+)
+LANGUAGE plpgsql
+SET search_path = public, extensions
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    kc.id,
+    kc.content,
+    kc.metadata,
+    1 - (kc.embedding <=> query_embedding) AS similarity
+  FROM public.knowledge_chunks kc
+  ORDER BY kc.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+
+ALTER TABLE public.knowledge_chunks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read knowledge_chunks" ON public.knowledge_chunks;
+CREATE POLICY "Anyone can read knowledge_chunks" ON public.knowledge_chunks FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Auth users can insert knowledge_chunks" ON public.knowledge_chunks;
+CREATE POLICY "Auth users can insert knowledge_chunks" ON public.knowledge_chunks FOR INSERT WITH CHECK (auth.role() = 'authenticated');

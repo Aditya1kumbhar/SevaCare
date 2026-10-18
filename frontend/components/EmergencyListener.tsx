@@ -70,7 +70,7 @@ export default function EmergencyListener() {
             action: {
               label: 'View',
               onClick: () => {
-                window.location.href = '/dashboard/emergency'
+                window.location.href = '/emergency'
               },
             },
             style: {

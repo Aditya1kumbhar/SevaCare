@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, processSyncQueue } from '@/lib/offline-db'
-import { CloudOff, RefreshCw, CheckCircle2, WifiOff } from 'lucide-react'
+import { CloudOff, RefreshCw, CheckCircle2, WifiOff, AlertTriangle } from 'lucide-react'
 import { useLanguage } from '@/components/LanguageProvider'
 import { toast } from 'sonner'
 
@@ -38,6 +38,10 @@ export default function SyncStatusIndicator() {
     () => db.syncQueue.where('status').equals('pending').count(),
     []
   )
+  const failedCount = useLiveQuery(
+    () => db.syncQueue.where('status').equals('failed').count(),
+    []
+  )
 
   const handleSyncNow = async () => {
     if (!navigator.onLine) {
@@ -50,6 +54,12 @@ export default function SyncStatusIndicator() {
     if (synced > 0) {
       toast.success(`Successfully synced ${synced} offline items to cloud!`)
     }
+  }
+
+  const handleRetryFailed = async () => {
+    await db.syncQueue.where('status').equals('failed').modify({ status: 'pending' })
+    toast.info('Retrying failed offline items...')
+    await handleSyncNow()
   }
 
   if (pendingCount === undefined) return null
@@ -73,6 +83,20 @@ export default function SyncStatusIndicator() {
         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
         <span>Syncing Cloud...</span>
       </AnimePulse>
+    )
+  }
+
+  if (failedCount && failedCount > 0) {
+    return (
+      <button
+        onClick={handleRetryFailed}
+        type="button"
+        title="Some offline actions failed to sync. Click to retry."
+        className="flex items-center gap-1.5 px-3 py-1 bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 rounded-full text-[11px] font-bold border border-rose-300 dark:border-rose-700 hover:bg-rose-200 transition-all cursor-pointer shadow-xs active:scale-95"
+      >
+        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+        <span>{failedCount} Failed Sync (Retry)</span>
+      </button>
     )
   }
 

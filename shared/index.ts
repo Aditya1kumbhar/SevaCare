@@ -11,7 +11,7 @@ export interface Resident {
   blood_group?: string;
   life_threatening_allergies?: string;
   mobility_status?: string;
-  critical_conditions?: string;
+  critical_conditions?: string[] | string;
   wandering_risk?: boolean;
   aggression_triggers?: string;
   communication_barrier?: string;
@@ -62,9 +62,20 @@ export interface EmergencyAlert {
   severity: 'low' | 'medium' | 'high' | 'critical';
   description?: string;
   resolved: boolean;
+  triggered_by?: string;
+  triggered_at: string;
   resolved_at?: string;
   escalated?: boolean;
-  created_at: string;
+}
+
+export interface MedicationAdministration {
+  id: string;
+  resident_id: string;
+  medication_name: string;
+  scheduled_time: string;
+  administered_at: string;
+  administered_by: string;
+  notes?: string;
 }
 
 export interface StaffMember {

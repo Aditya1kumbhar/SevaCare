@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import * as googleTTS from 'google-tts-api';
 import Groq from 'groq-sdk';
 
@@ -25,6 +26,12 @@ function pcmToWavBase64(pcmBase64: string, sampleRate = 24000, numChannels = 1, 
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { text, lang } = await request.json();
 
     if (!text) {
@@ -86,7 +93,7 @@ export async function POST(request: Request) {
     // ════════════════════════════════════════════════════
     // LAYER 1: Google Gemini 2.5 Flash Native Multimodal Audio Voice Engine (Studio Quality)
     // ════════════════════════════════════════════════════
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
 
     if (geminiKey) {
       try {

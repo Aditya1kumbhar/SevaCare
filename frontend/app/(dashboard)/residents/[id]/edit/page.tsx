@@ -155,7 +155,7 @@ export default function EditResidentPage({ params }: { params: Promise<{ id: str
 
     if (error) { toast.error(error.message); setLoading(false); return } // Changed from setSaving
     toast.success('PROFILE UPDATE SECURED.') // Changed toast message
-    router.push(`/dashboard/residents/${id}`)
+    router.push(`/residents/${id}`)
     router.refresh()
   }
 

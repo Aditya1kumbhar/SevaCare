@@ -54,3 +54,8 @@ firebase-credentials.json
 
 # Temporary project files
 tmpclaude-*
+
+# Build & Cache Artifacts
+*.tsbuildinfo
+__pycache__/
+*.pyc

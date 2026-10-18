@@ -77,7 +77,7 @@ export default function AddResidentPage() {
 
     if (error) { toast.error(error.message); setLoading(false); return }
     toast.success('RESIDENT PROFILE SECURED.')
-    router.push('/dashboard/residents')
+    router.push('/residents')
     router.refresh()
   }
 

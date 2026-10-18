@@ -117,13 +117,30 @@ export default function TelemedicinePage() {
 
     const signalingManager = new WebRTCSignalingManager(
       async (offer) => {
-        await pc.setRemoteDescription(new RTCSessionDescription(offer))
-        const answer = await pc.createAnswer()
-        await pc.setLocalDescription(answer)
-        signalingManager.sendAnswer(answer)
+        try {
+          if (pc.signalingState !== 'stable') {
+            await Promise.all([
+              pc.setLocalDescription({ type: 'rollback' }),
+              pc.setRemoteDescription(new RTCSessionDescription(offer))
+            ])
+          } else {
+            await pc.setRemoteDescription(new RTCSessionDescription(offer))
+          }
+          const answer = await pc.createAnswer()
+          await pc.setLocalDescription(answer)
+          signalingManager.sendAnswer(answer)
+        } catch (err) {
+          console.warn('WebRTC offer handling error:', err)
+        }
       },
       async (answer) => {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer))
+        try {
+          if (pc.signalingState === 'have-local-offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(answer))
+          }
+        } catch (err) {
+          console.warn('WebRTC answer handling error:', err)
+        }
       },
       async (candidate) => {
         try {
@@ -146,7 +163,7 @@ export default function TelemedicinePage() {
 
     signalingManagerRef.current = signalingManager
     await signalingManager.joinRoom(roomCode)
-    await applyBandwidthConstraints(pc, bandwidthMode)
+    await applyBandwidthConstraints(pc, localStreamRef.current, bandwidthMode)
   }
 
   const startStatsPolling = () => {
@@ -203,6 +220,12 @@ export default function TelemedicinePage() {
     stopStatsPolling()
     setStatus('Disconnected')
   }
+
+  useEffect(() => {
+    return () => {
+      endCall()
+    }
+  }, [])
 
   const toggleAudio = () => {
     if (localStreamRef.current) {
