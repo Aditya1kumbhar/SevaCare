@@ -11,6 +11,21 @@ const roboto = Roboto({ subsets: ['latin'], variable: '--font-roboto', weight: [
 export const metadata: Metadata = {
   title: 'SevaCare - Elder Care Management',
   description: 'A comprehensive caretaker management application for old age homes. Manage residents, track health information, and provide compassionate care.',
+  metadataBase: new URL('https://seva-care-db.vercel.app'),
+  openGraph: {
+    title: 'SevaCare - Elder Care Management',
+    description: 'A comprehensive caretaker management application for old age homes. Manage residents, track health information, and provide compassionate care.',
+    url: 'https://seva-care-db.vercel.app',
+    siteName: 'SevaCare',
+    images: [{ url: '/og-sevacare.jpg', width: 1200, height: 630, alt: 'SevaCare, offline-first elderly care' }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SevaCare - Elder Care Management',
+    description: 'Offline-first elderly care records for old age homes: residents, health tracking and caretaker workflows that keep working without the internet.',
+    images: ['/og-sevacare.jpg'],
+  },
   generator: 'v0.app',
   manifest: '/manifest.json',
   icons: {
