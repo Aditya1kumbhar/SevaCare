@@ -21,6 +21,23 @@ Whether it's a rural care home with no internet or an elderly resident speaking 
 
 ---
 
+## Field Study: Where SevaCare Comes From
+
+SevaCare was designed from direct observation at Nandanvan Vrudhashram, an old-age home in Katraj, Pune. A four-member student team from Sarhad College visited the home on 8 April 2026 for a Semester IV community project (CA 281 CEP, Savitribai Phule Pune University), studied how resident care is recorded there, and shaped the system around what the staff actually do.
+
+What the paper registers cost them:
+
+- Finding one resident's old record in the paper registers took **5 to 7 minutes**. The same lookup in SevaCare takes **under 3 seconds**.
+- Daily care runs on **staff memory**, which breaks down whenever a new volunteer joins.
+- Caregivers are not comfortable with English-only software, so the interface has to work in **Marathi and Hindi**.
+- Residents join exercise and wellness activities when there is **audio or visual guidance**, not written instructions.
+
+![Project team with residents at Nandanvan Vrudhashram, Katraj, Pune. GPS-stamped photo, 8 April 2026.](docs/field-study/field-group.jpg)
+
+![Nandanvan Vrudhashram, Katraj, Pune. GPS-stamped photo, 8 April 2026.](docs/field-study/field-exterior.jpg)
+
+---
+
 ## 🚀 Game-Changing Features
 
 ### 🎙️ 1. Multilingual AI Voice Assistant (Regional Languages)
